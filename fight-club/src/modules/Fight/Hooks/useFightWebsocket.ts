@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import * as StompJs from '@stomp/stompjs'; 
 import SockJS from 'sockjs-client';
+import { fightApi } from '../Config/fightApi';
 import type { 
     Fight, 
     HelpButton, 
@@ -8,17 +9,60 @@ import type {
     PlayerInputDto 
 } from '../types/fight';
 
-const API_URL = 'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
+const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
+    'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
 const WS_ENDPOINT = `${API_URL}/fightService`; 
 
-export const useFightWebsocket = (fightId: string, userId: string) => {
+export interface FightWebsocketState {
+    gameState: Fight | null;
+    isConnected: boolean;
+    isLoading: boolean;
+    error: string | null;
+    sendAction: (action: FighterAction) => void;
+    startFight: () => Promise<void>;
+    askForHelp: () => void;
+    claimHelp: () => void;
+}
+
+export const useFightWebsocket = (fightId: string, userId: string): FightWebsocketState => {
     const [gameState, setGameState] = useState<Fight | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     
     // Usamos any para evitar que TS bloquee la compilación por la librería
     const stompClient = useRef<any>(null);
+    
+    // Ref para evitar enviar acciones repetidas muy rápido
+    const lastActionRef = useRef<{ action: FighterAction; time: number } | null>(null);
+    const ACTION_THROTTLE_MS = 50; // Mínimo 50ms entre acciones iguales
 
+    // Cargar estado inicial de la pelea via HTTP
     useEffect(() => {
+        const loadInitialState = async () => {
+            if (!fightId) return;
+            
+            try {
+                setIsLoading(true);
+                const fight = await fightApi.getFight(fightId);
+                setGameState(fight);
+                setError(null);
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'Error al cargar la pelea';
+                setError(message);
+                console.error('Error cargando pelea inicial:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadInitialState();
+    }, [fightId]);
+
+    // Conectar WebSocket para actualizaciones en tiempo real
+    useEffect(() => {
+        if (!fightId) return;
+
         const socket = new SockJS(WS_ENDPOINT);
         
         // Intentamos obtener el constructor de Client de forma segura para Vite
@@ -26,6 +70,7 @@ export const useFightWebsocket = (fightId: string, userId: string) => {
         
         if (!StompClient) {
             console.error("No se pudo cargar el cliente STOMP. Revisa la instalación.");
+            setError("Error de conexión WebSocket");
             return;
         }
 
@@ -35,31 +80,42 @@ export const useFightWebsocket = (fightId: string, userId: string) => {
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
             onConnect: () => {
-                console.log('⚔️ Conectado al Fight Club Broker');
+                console.log('Conectado al Fight Club Broker');
                 setIsConnected(true);
+                setError(null);
                 
+                // Suscribirse al topic de la pelea
                 client.subscribe(`/topic/fight.${fightId}`, (message: any) => {
-                    const payload = JSON.parse(message.body);
+                    try {
+                        const payload = JSON.parse(message.body);
 
-                    if ("player1" in payload) {
-                        setGameState(payload as Fight);
-                    } else if ("status" in payload || "visible" in payload) {
-                        setGameState(prev => {
-                            if (!prev) return null;
-                            return {
-                                ...prev,
-                                helpButton: payload as HelpButton
-                            };
-                        });
+                        // Actualización completa del estado de la pelea
+                        if ("player1" in payload && "player2" in payload) {
+                            setGameState(payload as Fight);
+                        } 
+                        // Actualización parcial del HelpButton
+                        else if ("status" in payload || "visible" in payload) {
+                            setGameState(prev => {
+                                if (!prev) return null;
+                                return {
+                                    ...prev,
+                                    helpButton: payload as HelpButton
+                                };
+                            });
+                        }
+                    } catch (parseError) {
+                        console.error('Error parseando mensaje WebSocket:', parseError);
                     }
                 });
             },
             onDisconnect: () => {
                 setIsConnected(false);
-                console.log('❌ Desconectado del ring');
+                console.log('Desconectado del ring');
             },
             onStompError: (frame: any) => {
-                console.error('STOMP Error:', frame.headers?.['message']);
+                const errorMsg = frame.headers?.['message'] || 'Error STOMP desconocido';
+                console.error('STOMP Error:', errorMsg);
+                setError(errorMsg);
             }
         });
 
@@ -75,16 +131,38 @@ export const useFightWebsocket = (fightId: string, userId: string) => {
 
     // --- Funciones de Acción ---
 
+    /**
+     * Envía una acción del jugador al servidor via WebSocket.
+     * Incluye throttling para evitar spam de acciones repetidas.
+     */
     const sendAction = useCallback((action: FighterAction) => {
-        if (stompClient.current?.connected) {
-            const payload: PlayerInputDto = { userId, action };
-            stompClient.current.publish({
-                destination: `/fightService/fight/${fightId}/input`,
-                body: JSON.stringify(payload)
-            });
+        if (!stompClient.current?.connected) {
+            console.warn('WebSocket no conectado, no se puede enviar acción');
+            return;
         }
+
+        // Throttle: evitar enviar la misma acción muy rápido
+        const now = Date.now();
+        const lastAction = lastActionRef.current;
+        
+        if (lastAction && 
+            lastAction.action === action && 
+            now - lastAction.time < ACTION_THROTTLE_MS) {
+            return; // Ignorar acción repetida muy rápida
+        }
+
+        lastActionRef.current = { action, time: now };
+
+        const payload: PlayerInputDto = { userId, action };
+        stompClient.current.publish({
+            destination: `/fightService/fight/${fightId}/input`,
+            body: JSON.stringify(payload)
+        });
     }, [fightId, userId]);
 
+    /**
+     * Pide ayuda durante la pelea (activa el HelpButton)
+     */
     const askForHelp = useCallback(() => {
         if (stompClient.current?.connected) {
             stompClient.current.publish({
@@ -94,6 +172,9 @@ export const useFightWebsocket = (fightId: string, userId: string) => {
         }
     }, [fightId, userId]);
 
+    /**
+     * Reclama el botón de ayuda como espectador
+     */
     const claimHelp = useCallback(() => {
         if (stompClient.current?.connected) {
             stompClient.current.publish({
@@ -103,20 +184,28 @@ export const useFightWebsocket = (fightId: string, userId: string) => {
         }
     }, [fightId, userId]);
 
-    const startFight = async () => {
+    /**
+     * Inicia la pelea (cambia isActive a true)
+     */
+    const startFight = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/fight/start?fightId=${fightId}`, {
-                method: 'PUT'
-            });
-            if (!response.ok) throw new Error('Error al iniciar');
+            setIsLoading(true);
+            const updatedFight = await fightApi.startFight(fightId);
+            setGameState(updatedFight);
         } catch (err) {
+            const message = err instanceof Error ? err.message : 'Error al iniciar pelea';
+            setError(message);
             console.error('Fallo al iniciar:', err);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [fightId]);
 
     return { 
         gameState, 
-        isConnected, 
+        isConnected,
+        isLoading,
+        error,
         sendAction, 
         startFight, 
         askForHelp, 
