@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type { Room } from '../Types/RoomTypes';
-import type { UserCharacter } from '../Types/characterTypes';
-import { error } from 'three';
+import type { ApiUserCharacter } from '../Types/characterTypes';
 
 export type CharacterAssets = {
   characterId?: string;
@@ -10,7 +9,6 @@ export type CharacterAssets = {
   run_url?: string;
   attack_url?: string;
   hurt_url?: string;
-  [key: string]: any;
 };
 
 const lobbyApiAxios = axios.create({
@@ -58,7 +56,7 @@ export const lobbyApi ={
         return res.data;
     },
 
-    getUserCharacters : async(userId:string) : Promise<UserCharacter[]> =>{
+    getUserCharacters : async(userId:string) : Promise<ApiUserCharacter[]> =>{
         const res = await lobbyApiAxios.get(`${characters_rest_uri}/user/characters`,{
             params: { userId }
         }).catch((error)=>{
