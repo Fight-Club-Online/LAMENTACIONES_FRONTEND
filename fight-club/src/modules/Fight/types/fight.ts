@@ -25,20 +25,20 @@ export interface Fighter {
     id: string;
     userId: string;
     hasCharacter: boolean;
-    characterId: number;
-    characterName: string;
-    characterLevel: number;
-    characterATK: number;
-    characterDEF: number;
-    health: Health;
-    skills: Skill[];
+    characterId?: number;
+    characterName?: string;
+    characterLevel?: number;
+    characterATK?: number;
+    characterDEF?: number;
+    health?: Health; // Opcional hasta que se seleccione personaje
+    skills?: Skill[];
     posX: number;
     posY: number;
     velocityX: number;
     velocityY: number;
     isGrounded: boolean;
     direction: Direction;
-    hitbox: Hitbox; 
+    hitbox?: Hitbox; 
     currentAction: FighterAction;
     isBlocking: boolean;
     currentStunFrames: number;

@@ -48,8 +48,12 @@ export const FightPage: React.FC = () => {
     }, [gameState]);
 
     // Determinar el resultado de la pelea
+    // Solo evaluar si ambos fighters tienen health (personaje seleccionado)
     const fightResult = useMemo(() => {
         if (!gameState || gameState.isActive) return null;
+        
+        // No evaluar resultado si los fighters no tienen health aún
+        if (!gameState.player1.health || !gameState.player2.health) return null;
 
         const p1Dead = gameState.player1.health.currentHealth <= 0;
         const p2Dead = gameState.player2.health.currentHealth <= 0;

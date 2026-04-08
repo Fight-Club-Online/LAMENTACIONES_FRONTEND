@@ -12,7 +12,14 @@ interface Props {
 const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim }) => {
     if (!gameState) return null;
 
-    const calculateHP = (current: number, max: number) => (current / max) * 100;
+    const calculateHP = (current: number | undefined, max: number | undefined) => {
+        if (!current || !max || max === 0) return 100; // Default 100% si no hay datos
+        return (current / max) * 100;
+    };
+
+    // Verificar si los fighters tienen health (personaje seleccionado)
+    const p1Health = gameState.player1.health;
+    const p2Health = gameState.player2.health;
 
     return (
         <div className="absolute inset-x-0 top-0 p-8 flex flex-col items-center pointer-events-none">
@@ -22,12 +29,12 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
                 {/* Player 1 HUD */}
                 <div className="flex-1 flex flex-col items-end">
                     <span className="text-white font-black italic text-xl mb-1 drop-shadow-md uppercase">
-                        {gameState.player1.characterName}
+                        {gameState.player1.characterName || 'Jugador 1'}
                     </span>
                     <div className="w-full h-8 bg-gray-900 border-2 border-white skew-x-[-15deg] overflow-hidden">
                         <div 
                             className="h-full bg-gradient-to-r from-yellow-400 to-red-600 transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                            style={{ width: `${calculateHP(gameState.player1.health.currentHealth, gameState.player1.health.maxHealth)}%`, float: 'right' }}
+                            style={{ width: `${calculateHP(p1Health?.currentHealth, p1Health?.maxHealth)}%`, float: 'right' }}
                         />
                     </div>
                 </div>
@@ -40,12 +47,12 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
                 {/* Player 2 HUD */}
                 <div className="flex-1 flex flex-col items-start">
                     <span className="text-white font-black italic text-xl mb-1 drop-shadow-md uppercase">
-                        {gameState.player2.characterName}
+                        {gameState.player2.characterName || 'Jugador 2'}
                     </span>
                     <div className="w-full h-8 bg-gray-900 border-2 border-white skew-x-[-15deg] overflow-hidden">
                         <div 
                             className="h-full bg-gradient-to-r from-red-600 to-yellow-400 transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                            style={{ width: `${calculateHP(gameState.player2.health.currentHealth, gameState.player2.health.maxHealth)}%` }}
+                            style={{ width: `${calculateHP(p2Health?.currentHealth, p2Health?.maxHealth)}%` }}
                         />
                     </div>
                 </div>
