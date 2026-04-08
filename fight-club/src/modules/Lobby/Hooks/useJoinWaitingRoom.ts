@@ -52,11 +52,11 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
                     const updatedRoom: Room = JSON.parse(message.body);
                     hasSeenRoomRef.current = true;
                     setRoom(updatedRoom);
-                    
+                    console.log('updatedRoom', updatedRoom);
                     // Si el estado indica que el juego comenzó, navegar a la pelea
                     if (GAME_STARTED_STATES.includes(updatedRoom.roomState?.toUpperCase())) {
                         // Usar roomCode como fightId (o el backend puede agregar fightId a Room)
-                        navigate(`/fight/${updatedRoom.roomCode}`);
+                        navigate(`/fight/${updatedRoom.roomId}`);
                     }
                 });
 

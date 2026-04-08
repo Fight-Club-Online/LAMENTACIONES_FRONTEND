@@ -75,7 +75,7 @@ export interface Fight {
 }
 
 export interface Room {
-    roomId: number;
+    roomId: string;
     roomCode: string;
     roomState: RoomState;
     hostId: string;

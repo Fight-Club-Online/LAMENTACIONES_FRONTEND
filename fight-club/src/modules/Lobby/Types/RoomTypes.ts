@@ -1,7 +1,7 @@
 import type { Player } from "./PlayerType";
 
 export type Room = {
-    roomId: number;
+    roomId: string;
     roomCode: string;
     hostId: string;
     roomState: string;
