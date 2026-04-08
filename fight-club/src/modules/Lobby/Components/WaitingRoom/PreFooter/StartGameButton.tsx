@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Hook para navegar
+import { useNavigate } from 'react-router-dom'; 
 import { useStartGame } from '../../../Hooks/useStartGame';
 import type { Room } from '../../../Types/RoomTypes';
 
@@ -8,14 +8,13 @@ type props = {
 }
 
 export const StartGameButton: React.FC<props> = ({ roomCode }) => {
-    const navigate = useNavigate(); // 2. Inicializar navegación
+    const navigate = useNavigate(); 
     const [loading, setLoading] = useState(false);
     const { startGame } = useStartGame({ code: roomCode });
     
     const iniciar = async () => {
         setLoading(true);
         try {
-            // El backend recibe el PUT y crea la pelea en Redis
             const { room, error } = await startGame(roomCode);
 
             if (error) {
@@ -23,9 +22,7 @@ export const StartGameButton: React.FC<props> = ({ roomCode }) => {
                 return;
             }
 
-            // 3. REDIRECCIÓN MANUAL:
-            // Una vez que el backend confirma (Status 200), saltamos a la pelea
-            console.log("¡Todo listo en el ring! Redirigiendo...");
+
             navigate(`/fight/${roomCode}`); 
 
         } catch (err) {
