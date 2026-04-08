@@ -38,14 +38,22 @@ export interface Fighter {
     velocityY: number;
     isGrounded: boolean;
     direction: Direction;
+    hitbox: Hitbox; 
     currentAction: FighterAction;
     isBlocking: boolean;
     currentStunFrames: number;
 }
 
+export interface Hitbox {
+    offsetX: number;
+    offsetY: number;
+    width: number;
+    height: number;
+}
+
 export interface HelpButton {
     buttonId: number;
-    visible: boolean;
+    isVisible: boolean; 
     fightId: string;
     activatedForUserId: string;
     claimedByUserId: string;
@@ -57,13 +65,13 @@ export interface Player {
     userId: string;
     playerType: PlayerType;
 }
-
 export interface Fight {
     id: string;
     player1: Fighter;
     player2: Fighter;
     isActive: boolean;
     helpButton: HelpButton;
+    spectators?: Player[]; 
 }
 
 export interface Room {
