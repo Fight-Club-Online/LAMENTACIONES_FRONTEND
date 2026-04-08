@@ -53,7 +53,7 @@ export interface Hitbox {
 
 export interface HelpButton {
     buttonId: number;
-    isVisible: boolean; 
+    visible: boolean; // Backend usa "visible" (sin el "is")
     fightId: string;
     activatedForUserId: string;
     claimedByUserId: string;

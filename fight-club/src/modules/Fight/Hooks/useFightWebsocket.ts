@@ -89,12 +89,15 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
                     try {
                         const payload = JSON.parse(message.body);
 
-                        // Actualización completa del estado de la pelea
+                        // Actualización completa del estado de la pelea (Fight)
+                        // El backend envía Fight cuando: fightStateUpdate o changeFighters
                         if ("player1" in payload && "player2" in payload) {
                             setGameState(payload as Fight);
                         } 
                         // Actualización parcial del HelpButton
-                        else if ("status" in payload || "visible" in payload) {
+                        // El backend envía solo HelpButton cuando: updateHelpButton
+                        // Detectamos por buttonId o status que son únicos del HelpButton
+                        else if ("buttonId" in payload || ("status" in payload && !("player1" in payload))) {
                             setGameState(prev => {
                                 if (!prev) return null;
                                 return {
