@@ -19,6 +19,7 @@ export interface FightWebsocketState {
     isLoading: boolean;
     error: string | null;
     sendAction: (action: FighterAction) => void;
+    selectCharacter: (characterId: number) => void;
     startFight: () => Promise<void>;
     askForHelp: () => void;
     claimHelp: () => void;
@@ -164,6 +165,22 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     }, [fightId, userId]);
 
     /**
+     * Selecciona un personaje para el jugador actual
+     * Se envía via WebSocket y el backend actualiza el Fighter correspondiente
+     */
+    const selectCharacter = useCallback((characterId: number) => {
+        if (!stompClient.current?.connected) {
+            console.warn('WebSocket no conectado, no se puede seleccionar personaje');
+            return;
+        }
+
+        stompClient.current.publish({
+            destination: `/fightService/fight/${fightId}/selectCharacter`,
+            body: JSON.stringify({ odUserId: userId, characterId })
+        });
+    }, [fightId, userId]);
+
+    /**
      * Pide ayuda durante la pelea (activa el HelpButton)
      */
     const askForHelp = useCallback(() => {
@@ -209,7 +226,8 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
         isConnected,
         isLoading,
         error,
-        sendAction, 
+        sendAction,
+        selectCharacter,
         startFight, 
         askForHelp, 
         claimHelp 

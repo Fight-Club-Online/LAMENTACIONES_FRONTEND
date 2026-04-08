@@ -5,6 +5,7 @@ export { default as StartFightButton } from './Components/StartFightButton';
 
 // Páginas
 export { FightPage } from './pages/FightPage';
+export { SelectCharacters } from './pages/SelectCharacters';
 
 // Hooks
 export { useFightWebsocket } from './Hooks/useFightWebsocket';

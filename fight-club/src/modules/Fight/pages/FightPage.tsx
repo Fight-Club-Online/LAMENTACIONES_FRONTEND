@@ -4,6 +4,7 @@ import { useFightWebsocket } from '../Hooks/useFightWebsocket';
 import { useKeyboardControls } from '../Hooks/useKeyboardControls';
 import ArenaCanvas from '../Components/ArenaCanvas';
 import FightHUD from '../Components/FightHUD';
+import { SelectCharacters } from './SelectCharacters';
 
 export const FightPage: React.FC = () => {
     const { fightId } = useParams<{ fightId: string }>();
@@ -15,7 +16,8 @@ export const FightPage: React.FC = () => {
         isConnected,
         isLoading,
         error,
-        sendAction, 
+        sendAction,
+        selectCharacter,
         startFight, 
         askForHelp, 
         claimHelp 
@@ -24,6 +26,26 @@ export const FightPage: React.FC = () => {
     // Conectamos los controles de teclado al websocket
     // Solo activos si la pelea está en progreso
     useKeyboardControls(sendAction, !!gameState?.isActive);
+
+    // Determinar la fase actual de la pelea
+    const fightPhase = useMemo(() => {
+        if (!gameState) return 'loading';
+        
+        // Si la pelea no está activa y algún jugador no tiene personaje -> selección
+        const bothHaveCharacters = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
+        
+        if (!gameState.isActive && !bothHaveCharacters) {
+            return 'character-selection';
+        }
+        
+        // Si ambos tienen personaje pero la pelea no está activa -> listo para empezar
+        if (!gameState.isActive && bothHaveCharacters) {
+            return 'ready-to-start';
+        }
+        
+        // Pelea activa
+        return 'fighting';
+    }, [gameState]);
 
     // Determinar el resultado de la pelea
     const fightResult = useMemo(() => {
@@ -81,6 +103,20 @@ export const FightPage: React.FC = () => {
         );
     }
 
+    // Fase de selección de personajes
+    if (fightPhase === 'character-selection' || fightPhase === 'ready-to-start') {
+        return (
+            <SelectCharacters
+                gameState={gameState!}
+                userId={userId}
+                isConnected={isConnected}
+                onSelectCharacter={selectCharacter}
+                onStartFight={startFight}
+            />
+        );
+    }
+
+    // Fase de pelea activa
     return (
         <main className="relative h-screen w-screen bg-zinc-950 flex flex-col items-center justify-center p-4 overflow-hidden">
             {/* Indicador de estado de conexión */}
