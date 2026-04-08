@@ -10,7 +10,7 @@ import type {
 } from '../types/fight';
 
 const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
-    'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
+    'http://localhost:8080';
 const WS_ENDPOINT = `${API_URL}/fightService`; 
 
 export interface FightWebsocketState {

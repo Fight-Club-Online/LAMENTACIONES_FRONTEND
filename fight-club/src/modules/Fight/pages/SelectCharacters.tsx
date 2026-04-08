@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Fight } from '../types/fight';
-import type { Character } from '../../Lobby/Types/characterTypes';
-import { axiosLobby } from '../../Lobby/Config/axiosLobby';
+import type { UserCharacter } from '../../Lobby/Types/characterTypes';
+import { lobbyApi } from '../../Lobby/Config/axiosLobby';
 
 interface SelectCharactersProps {
     gameState: Fight;
@@ -18,7 +18,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     onSelectCharacter,
     onStartFight,
 }) => {
-    const [characters, setCharacters] = useState<Character[]>([]);
+    const [characters, setCharacters] = useState<UserCharacter[]>([]);
     const [isLoadingCharacters, setIsLoadingCharacters] = useState(true);
     const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
 
@@ -36,16 +36,11 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
         const loadCharacters = async () => {
             try {
                 setIsLoadingCharacters(true);
-                const response = await axiosLobby.get(`/characters/user/${userId}`);
-                setCharacters(response.data || []);
+                const response = await lobbyApi.getUserCharacters(`/characters/user/${userId}`);
+                setCharacters(response || []);
             } catch (error) {
                 console.error('Error cargando personajes:', error);
-                // Personajes de ejemplo si falla la carga
-                setCharacters([
-                    { characterId: 1, characterName: 'Guerrero', characterLevel: 10, characterHp: '100', characterATK: '25', characterDEF: '15', characterImg: '' },
-                    { characterId: 2, characterName: 'Mago', characterLevel: 8, characterHp: '80', characterATK: '35', characterDEF: '10', characterImg: '' },
-                    { characterId: 3, characterName: 'Asesino', characterLevel: 12, characterHp: '90', characterATK: '30', characterDEF: '12', characterImg: '' },
-                ]);
+                setCharacters([]);
             } finally {
                 setIsLoadingCharacters(false);
             }
@@ -107,12 +102,12 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             {characters.map((char) => (
                                 <button
-                                    key={char.characterId}
-                                    onClick={() => handleSelectCharacter(char.characterId)}
+                                    key={char.character.characterId}
+                                    onClick={() => handleSelectCharacter(char.character.characterId)}
                                     disabled={currentPlayerReady}
                                     className={`
                                         relative p-4 rounded-lg border-2 transition-all
-                                        ${selectedCharacterId === char.characterId
+                                        ${selectedCharacterId === char.character.characterId
                                             ? 'border-red-500 bg-red-500/20 scale-105'
                                             : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
                                         }
@@ -121,10 +116,10 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                 >
                                     {/* Imagen del personaje */}
                                     <div className="aspect-square bg-zinc-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                                        {char.characterImg ? (
+                                        {char.character.characterImg ? (
                                             <img 
-                                                src={char.characterImg} 
-                                                alt={char.characterName}
+                                                src={char.character.characterImg} 
+                                                alt={char.character.characterName}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -133,17 +128,17 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                     </div>
 
                                     {/* Info del personaje */}
-                                    <h3 className="font-bold text-white text-sm truncate">{char.characterName}</h3>
-                                    <p className="text-xs text-zinc-400">Nivel {char.characterLevel}</p>
+                                    <h3 className="font-bold text-white text-sm truncate">{char.character.characterName}</h3>
+                                    <p className="text-xs text-zinc-400">Nivel {char.character.characterLevel}</p>
 
                                     {/* Stats */}
                                     <div className="mt-2 flex gap-2 text-xs">
-                                        <span className="text-red-400">ATK:{char.characterATK}</span>
-                                        <span className="text-blue-400">DEF:{char.characterDEF}</span>
+                                        <span className="text-red-400">ATK:{char.character.characterATK}</span>
+                                        <span className="text-blue-400">DEF:{char.character.characterDEF}</span>
                                     </div>
 
                                     {/* Indicador de seleccionado */}
-                                    {selectedCharacterId === char.characterId && (
+                                    {selectedCharacterId === char.character.characterId && (
                                         <div className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
