@@ -11,11 +11,8 @@ type props = {
     playerType: string;
 };
 
-// Tipo para el mensaje de inicio de juego que viene del backend
-type GameStartedMessage = {
-    fightId: string;
-    roomCode: string;
-};
+// Estados de la room que indican que el juego ha comenzado
+const GAME_STARTED_STATES = ['STARTED', 'IN_GAME', 'FIGHTING', 'IN_PROGRESS'];
 
 export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
     const navigate = useNavigate();
@@ -50,17 +47,17 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
                 setConnected(true);
                 
                 // Suscribirse a actualizaciones de la room
+                // Cuando roomState cambie a STARTED/IN_GAME, todos navegarán
                 client.subscribe(`/room/${roomCode}`,(message)=>{
-                    const roomState : Room = JSON.parse(message.body);
+                    const updatedRoom: Room = JSON.parse(message.body);
                     hasSeenRoomRef.current = true;
-                    setRoom(roomState);
-                });
-
-                // Suscribirse al evento de inicio de juego - todos los participantes
-                client.subscribe(`/room/${roomCode}/game-started`, (message) => {
-                    const gameStarted: GameStartedMessage = JSON.parse(message.body);
-                    // Navegar a la pelea - esto afecta a TODOS los suscriptores
-                    navigate(`/fight/${gameStarted.fightId}`);
+                    setRoom(updatedRoom);
+                    
+                    // Si el estado indica que el juego comenzó, navegar a la pelea
+                    if (GAME_STARTED_STATES.includes(updatedRoom.roomState?.toUpperCase())) {
+                        // Usar roomCode como fightId (o el backend puede agregar fightId a Room)
+                        navigate(`/fight/${updatedRoom.roomCode}`);
+                    }
                 });
 
                 client.publish({
@@ -117,7 +114,9 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
      * Inicia el juego - solo el host puede llamar esto
      * Hace la llamada HTTP al backend que:
      * 1. Crea el Fight
-     * 2. Envía el mensaje game-started via WebSocket a todos los participantes
+     * 2. Actualiza el roomState de la Room
+     * 3. Envía la Room actualizada via WebSocket a /room/{roomCode}
+     * 4. Todos los clientes detectan el cambio de roomState y navegan
      */
     const startGame = useCallback(async () => {
         if (!room || room.hostId !== userId) {
@@ -128,8 +127,9 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
         setIsStartingGame(true);
         try {
             // Llamada HTTP que inicia el juego
-            // El backend debería enviar el mensaje a /room/{roomCode}/game-started
+            // El backend actualiza roomState y lo envía via WebSocket
             const updatedRoom = await lobbyApi.startPrivateGame(roomCode);
+            // La navegación ocurre automáticamente cuando llega la actualización via WebSocket
             return { success: true, room: updatedRoom };
         } catch (err: any) {
             const errorMsg = err?.message || 'Error al iniciar el juego';
