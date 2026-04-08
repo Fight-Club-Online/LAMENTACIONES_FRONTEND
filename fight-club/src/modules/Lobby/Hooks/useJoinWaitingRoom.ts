@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react"
+import { useNavigate } from "react-router-dom";
 import type { Room } from "../Types/RoomTypes"
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -10,11 +11,19 @@ type props = {
     playerType: string;
 };
 
+// Tipo para el mensaje de inicio de juego que viene del backend
+type GameStartedMessage = {
+    fightId: string;
+    roomCode: string;
+};
+
 export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
+    const navigate = useNavigate();
     const [room,setRoom] = useState<Room | null>(null);
     const [connected,setConnected] = useState(false);
     const [error,setError] = useState<string | null>(null)
     const [roomDisbanded, setRoomDisbanded] = useState(false);
+    const [isStartingGame, setIsStartingGame] = useState(false);
     const hasSeenRoomRef = useRef(false);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const clientRef = useRef<Client | null>(null);
@@ -37,17 +46,27 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
   
         const client = new Client({
             webSocketFactory : ()=> new SockJS(socketUrl),
-            onConnect: () =>{setConnected(true)
-                    client.subscribe(`/room/${roomCode}`,(message)=>{
-                        const roomState : Room = JSON.parse(message.body);
-                        hasSeenRoomRef.current = true;
-                        setRoom(roomState);
-                    });
+            onConnect: () =>{
+                setConnected(true);
+                
+                // Suscribirse a actualizaciones de la room
+                client.subscribe(`/room/${roomCode}`,(message)=>{
+                    const roomState : Room = JSON.parse(message.body);
+                    hasSeenRoomRef.current = true;
+                    setRoom(roomState);
+                });
 
-                    client.publish({
-                        destination: "/game/join-room",
-                        body: JSON.stringify({ roomCode, userId,playerType }),
-                    }); 
+                // Suscribirse al evento de inicio de juego - todos los participantes
+                client.subscribe(`/room/${roomCode}/game-started`, (message) => {
+                    const gameStarted: GameStartedMessage = JSON.parse(message.body);
+                    // Navegar a la pelea - esto afecta a TODOS los suscriptores
+                    navigate(`/fight/${gameStarted.fightId}`);
+                });
+
+                client.publish({
+                    destination: "/game/join-room",
+                    body: JSON.stringify({ roomCode, userId,playerType }),
+                }); 
                     
             },
             onDisconnect: () => {setConnected(false)
@@ -62,7 +81,7 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
             client.deactivate();
         };
 
-    },[userId,roomCode,playerType]);
+    },[userId,roomCode,playerType,navigate]);
 
     useEffect(() => {
         let cancelled = false;
@@ -94,7 +113,43 @@ export const useJoinWaitingRoomg = ({roomCode,userId,playerType}:props)=>{
         };
     }, [roomCode]);
 
-    return { room, connected, error, leave, roomDisbanded };
+    /**
+     * Inicia el juego - solo el host puede llamar esto
+     * Hace la llamada HTTP al backend que:
+     * 1. Crea el Fight
+     * 2. Envía el mensaje game-started via WebSocket a todos los participantes
+     */
+    const startGame = useCallback(async () => {
+        if (!room || room.hostId !== userId) {
+            console.warn('Solo el host puede iniciar el juego');
+            return { success: false, error: 'No eres el host' };
+        }
+
+        setIsStartingGame(true);
+        try {
+            // Llamada HTTP que inicia el juego
+            // El backend debería enviar el mensaje a /room/{roomCode}/game-started
+            const updatedRoom = await lobbyApi.startPrivateGame(roomCode);
+            return { success: true, room: updatedRoom };
+        } catch (err: any) {
+            const errorMsg = err?.message || 'Error al iniciar el juego';
+            setError(errorMsg);
+            return { success: false, error: errorMsg };
+        } finally {
+            setIsStartingGame(false);
+        }
+    }, [room, userId, roomCode]);
+
+    return { 
+        room, 
+        connected, 
+        error, 
+        leave, 
+        roomDisbanded,
+        startGame,
+        isStartingGame,
+        isHost: room?.hostId === userId
+    };
 
 
 }

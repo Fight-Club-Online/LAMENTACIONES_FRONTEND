@@ -8,11 +8,20 @@ import type { Player } from '../../Types/PlayerType';
 
 type props={
     roomRequest : Room;
-    leave : () => void
+    leave : () => void;
+    isHost: boolean;
+    onStartGame: () => Promise<{ success: boolean; error?: string }>;
+    isStartingGame: boolean;
 }
 
 
-export const WaitingRoom: React.FC<props> = ({roomRequest,leave}) => {
+export const WaitingRoom: React.FC<props> = ({
+    roomRequest,
+    leave,
+    isHost,
+    onStartGame,
+    isStartingGame
+}) => {
     const playerList: Player[] =
         roomRequest.players?.filter((p) => p.playerType === "PLAYER") ?? [];
 
@@ -47,7 +56,12 @@ export const WaitingRoom: React.FC<props> = ({roomRequest,leave}) => {
                 </div>
             </main>
             <PreFooterWaitingBar roomCode={roomRequest.roomCode} />
-            <BottonWaitingBar roomCode={roomRequest.roomCode} />
+            <BottonWaitingBar 
+                roomCode={roomRequest.roomCode}
+                isHost={isHost}
+                onStartGame={onStartGame}
+                isStartingGame={isStartingGame}
+            />
         </div>
     );
 };

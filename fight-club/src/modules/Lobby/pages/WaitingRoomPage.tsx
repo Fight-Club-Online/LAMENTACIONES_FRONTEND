@@ -35,7 +35,16 @@ const WaitingRoomWithConnection: React.FC<WaitingRoomWithConnectionProps> = ({
   playerType,
 }) => {
   const navigate = useNavigate();
-  const { room, connected, error, leave, roomDisbanded } = useJoinWaitingRoomg({
+  const { 
+    room, 
+    connected, 
+    error, 
+    leave, 
+    roomDisbanded,
+    startGame,
+    isStartingGame,
+    isHost
+  } = useJoinWaitingRoomg({
     roomCode,
     userId,
     playerType,
@@ -60,5 +69,13 @@ const WaitingRoomWithConnection: React.FC<WaitingRoomWithConnectionProps> = ({
   if (roomDisbanded) return null;
   if (!connected || !room) return <div>Conectando...</div>;
 
-  return <WaitingRoom roomRequest={room} leave={leave} />;
+  return (
+    <WaitingRoom 
+      roomRequest={room} 
+      leave={leave}
+      isHost={isHost}
+      onStartGame={startGame}
+      isStartingGame={isStartingGame}
+    />
+  );
 };
