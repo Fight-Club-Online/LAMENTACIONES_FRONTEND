@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { Fight } from '../types/fight';
 import type { UserCharacter } from '../../Lobby/Types/characterTypes';
 import { lobbyApi } from '../../Lobby/Config/axiosLobby';
+import { FooterSelectCharacter } from '../Components/SelectCharacter/footerSC';
+import { HeaderSelectCharacter } from '../Components/SelectCharacter/headerSC';
 
 interface SelectCharactersProps {
     gameState: Fight;
@@ -10,6 +12,22 @@ interface SelectCharactersProps {
     onSelectCharacter: (characterId: number) => void;
     onStartFight: () => void;
 }
+
+ const defaultCharacter: UserCharacter = {
+    id: "uc-001",
+    user: "usuario123",
+    character: {
+      characterId: 1,
+      characterLevel: 10,
+      characterName: "Guerrero Arcano",
+      characterHp: "1500",
+      characterATK: "250",
+      characterDEF: "180",
+      characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
+    },
+  };
+
+
 
 export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     gameState,
@@ -24,6 +42,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
 
     // Determinar si este usuario es player1 o player2
     const isPlayer1 = gameState.player1.userId === userId;
+    console.log('isPlayer1', isPlayer1 + ' ' + userId);
     const currentPlayer = isPlayer1 ? gameState.player1 : gameState.player2;
     const opponent = isPlayer1 ? gameState.player2 : gameState.player1;
 
@@ -37,10 +56,10 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
             try {
                 setIsLoadingCharacters(true);
                 const response = await lobbyApi.getUserCharacters(`/characters/user/${userId}`);
-                setCharacters(response || []);
+                setCharacters([defaultCharacter]);
             } catch (error) {
                 console.error('Error cargando personajes:', error);
-                setCharacters([]);
+                setCharacters([defaultCharacter]);
             } finally {
                 setIsLoadingCharacters(false);
             }
@@ -57,27 +76,19 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     }, [currentPlayer.hasCharacter, currentPlayer.characterId]);
 
     const handleSelectCharacter = (characterId: number) => {
-        if (currentPlayerReady) return; // Ya confirmó selección
+        if (currentPlayerReady) return; 
         setSelectedCharacterId(characterId);
     };
 
     const handleConfirmSelection = () => {
         if (selectedCharacterId === null) return;
         onSelectCharacter(selectedCharacterId);
+        console.log("orpimido")
     };
 
     return (
         <div className="min-h-screen bg-zinc-950 flex flex-col">
-            {/* Header con estado de conexión */}
-            <header className="flex items-center justify-between p-4 border-b border-zinc-800">
-                <h1 className="text-2xl font-black text-white italic">SELECCIONAR PERSONAJE</h1>
-                <div className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
-                    <span className="text-xs text-zinc-400">
-                        {isConnected ? 'Conectado' : 'Desconectado'}
-                    </span>
-                </div>
-            </header>
+            <HeaderSelectCharacter isConnected={isConnected} />
 
             {/* Contenido principal */}
             <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6">
@@ -209,22 +220,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                 </div>
             </main>
 
-            {/* Footer - Botón iniciar pelea */}
-            <footer className="p-6 border-t border-zinc-800">
-                <button
-                    onClick={onStartFight}
-                    disabled={!bothPlayersReady}
-                    className={`
-                        w-full py-5 text-xl font-black italic rounded-lg transition-all
-                        ${bothPlayersReady
-                            ? 'bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white cursor-pointer animate-pulse'
-                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                        }
-                    `}
-                >
-                    {bothPlayersReady ? 'INICIAR PELEA' : 'ESPERANDO A AMBOS JUGADORES...'}
-                </button>
-            </footer>
+            <FooterSelectCharacter onStartFight={onStartFight} bothPlayersReady={bothPlayersReady} />
         </div>
     );
 };

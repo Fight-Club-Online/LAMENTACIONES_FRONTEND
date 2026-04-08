@@ -11,7 +11,17 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
     'http://localhost:8080';
-const WS_ENDPOINT = `${API_URL}/fightService`; 
+const WS_ENDPOINT = `${API_URL}/fightService`;
+
+/** Da tiempo a que eventos (p. ej. Rabbit) propaguen la pelea tras iniciar desde lobby */
+const FIGHT_INITIAL_FETCH_DELAY_MS = (() => {
+    const raw = import.meta.env.VITE_FIGHT_INITIAL_FETCH_DELAY_MS;
+    if (raw === undefined || raw === '') return 800;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0 ? n : 800;
+})();
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export interface FightWebsocketState {
     gameState: Fight | null;
@@ -40,24 +50,35 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
 
     // Cargar estado inicial de la pelea via HTTP
     useEffect(() => {
+        let cancelled = false;
+
         const loadInitialState = async () => {
             if (!fightId) return;
             
             try {
                 setIsLoading(true);
+                await delay(FIGHT_INITIAL_FETCH_DELAY_MS);
+                if (cancelled) return;
+
                 const fight = await fightApi.getFight(fightId);
+                if (cancelled) return;
+
                 setGameState(fight);
                 setError(null);
             } catch (err) {
+                if (cancelled) return;
                 const message = err instanceof Error ? err.message : 'Error al cargar la pelea';
                 setError(message);
                 console.error('Error cargando pelea inicial:', err);
             } finally {
-                setIsLoading(false);
+                if (!cancelled) setIsLoading(false);
             }
         };
 
-        loadInitialState();
+        void loadInitialState();
+        return () => {
+            cancelled = true;
+        };
     }, [fightId]);
 
     // Conectar WebSocket para actualizaciones en tiempo real
@@ -176,7 +197,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
 
         stompClient.current.publish({
             destination: `/fightService/fight/${fightId}/selectCharacter`,
-            body: JSON.stringify({ odUserId: userId, characterId })
+            body: JSON.stringify({ userId: userId, characterId })
         });
     }, [fightId, userId]);
 
@@ -212,6 +233,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
             setIsLoading(true);
             const updatedFight = await fightApi.startFight(fightId);
             setGameState(updatedFight);
+            console.log('Pelea iniciada', updatedFight);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Error al iniciar pelea';
             setError(message);

@@ -14,7 +14,6 @@ export const StartGameButton: React.FC<Props> = ({
         if (!result.success) {
             console.error("Error al iniciar:", result.error);
         }
-        // La navegación ocurre automáticamente via WebSocket para todos los participantes
     };
 
     return (

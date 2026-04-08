@@ -1,15 +1,19 @@
 import React, { useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
 import { useKeyboardControls } from '../Hooks/useKeyboardControls';
 import ArenaCanvas from '../Components/ArenaCanvas';
 import FightHUD from '../Components/FightHUD';
 import { SelectCharacters } from './SelectCharacters';
 
-export const FightPage: React.FC = () => {
-    const { fightId } = useParams<{ fightId: string }>();
+type FightPageInnerProps = {
+    fightId: string;
+    userId: string;
+};
+
+const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     const navigate = useNavigate();
-    const userId = localStorage.getItem('userId') || 'player-1'; 
 
     const { 
         gameState, 
@@ -234,4 +238,13 @@ export const FightPage: React.FC = () => {
             )}
         </main>
     );
+};
+
+export const FightPage: React.FC = () => {
+    const { fightId } = useParams<{ fightId: string }>();
+    const userId = getUserData()?.userId ?? null;
+    if (!userId) {
+        return <Navigate to="/login" replace />;
+    }
+    return <FightPageInner fightId={fightId ?? ''} userId={userId} />;
 };
