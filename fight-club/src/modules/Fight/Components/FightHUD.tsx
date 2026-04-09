@@ -22,7 +22,7 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
     const p2Health = gameState.player2.health;
 
     return (
-        <div className="absolute inset-x-0 top-0 p-8 flex flex-col items-center pointer-events-none">
+        <div className="absolute inset-0 p-8 flex flex-col items-center pointer-events-none">
             {/* Contenedor de Barras de Vida */}
             <div className="w-full max-w-5xl flex justify-between items-center gap-4">
                 
@@ -58,35 +58,35 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
                 </div>
             </div>
 
-            {/* Panel de Control Central (Botones Interactivos) */}
-            <div className="mt-10 pointer-events-auto flex gap-4">
-                {!gameState.active && (
+            {/* Panel de Control Central Superior (Botón Start) */}
+            {!gameState.active && (
+                <div className="mt-10 pointer-events-auto">
                     <button 
                         onClick={onStart}
                         className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-3 rounded italic uppercase border-b-4 border-green-800 transition-transform active:scale-95"
                     >
                         START FIGHT
                     </button>
-                )}
+                </div>
+            )}
 
-                {/* Lógica del HelpButton */}
-                {gameState.helpButton?.isVisible && (
-                    <div className="flex gap-4 animate-bounce">
-                        <button 
-                            onClick={onHelp}
-                            className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-6 py-2 rounded uppercase border-b-4 border-yellow-700"
-                        >
-                            ¡PEDIR AYUDA!
-                        </button>
-                        <button 
-                            onClick={onClaim}
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-black px-6 py-2 rounded uppercase border-b-4 border-purple-900"
-                        >
-                            RELEVAR
-                        </button>
-                    </div>
-                )}
-            </div>
+            {/* Botón de Ayuda - Centro Inferior */}
+            {gameState.helpButton?.isVisible && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto flex gap-4 animate-bounce">
+                    <button 
+                        onClick={onHelp}
+                        className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-6 py-3 rounded uppercase border-b-4 border-yellow-700 transition-transform active:scale-95"
+                    >
+                        PEDIR AYUDA
+                    </button>
+                    <button 
+                        onClick={onClaim}
+                        className="bg-purple-600 hover:bg-purple-500 text-white font-black px-6 py-3 rounded uppercase border-b-4 border-purple-900 transition-transform active:scale-95"
+                    >
+                        RELEVAR
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

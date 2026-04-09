@@ -10,8 +10,9 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const FIGHTER_WIDTH = 60;
 const FIGHTER_HEIGHT = 120;
-const GROUND_Y = CANVAS_HEIGHT - 50;
+const GROUND_Y = CANVAS_HEIGHT - 40; // Suelo más abajo
 const LERP_SPEED = 0.25;
+const FIGHTER_GROUND_Y = GROUND_Y - FIGHTER_HEIGHT; // Posición Y de los fighters en el suelo
 
 const ACTION_COLORS: Record<FighterAction, string> = {
     IDLE: '#3b82f6',
@@ -43,8 +44,8 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
     const gameStateRef = useRef<Fight | null>(null);
 
     const visualPositionsRef = useRef<VisualPositions>({
-        player1: { x: 100, y: GROUND_Y - FIGHTER_HEIGHT },
-        player2: { x: CANVAS_WIDTH - 160, y: GROUND_Y - FIGHTER_HEIGHT },
+        player1: { x: 80, y: FIGHTER_GROUND_Y },  // Lado izquierdo
+        player2: { x: CANVAS_WIDTH - FIGHTER_WIDTH - 80, y: FIGHTER_GROUND_Y }, // Lado derecho
         initialized: false,
     });
 
