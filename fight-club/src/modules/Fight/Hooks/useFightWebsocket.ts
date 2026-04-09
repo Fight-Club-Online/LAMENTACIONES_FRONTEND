@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import * as StompJs from '@stomp/stompjs'; 
 import SockJS from 'sockjs-client';
+import { Client } from "@stomp/stompjs";
+
 import { fightApi } from '../Config/fightApi';
 import type { 
     Fight, 
@@ -86,40 +88,29 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     useEffect(() => {
         if (!fightId) return;
 
-        const socket = new SockJS(WS_ENDPOINT);
-        
-        // Intentamos obtener el constructor de Client de forma segura para Vite
-        const StompClient = (StompJs as any).Client || (StompJs as any).CompatClient;
-        
-        if (!StompClient) {
-            console.error("No se pudo cargar el cliente STOMP. Revisa la instalación.");
-            setError("Error de conexión WebSocket");
-            return;
-        }
 
-        const client = new StompClient({
-            webSocketFactory: () => socket,
+        const client = new Client({
+            webSocketFactory: () => new SockJS(WS_ENDPOINT, null, {
+                transports: ['websocket']
+            }),
+        
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
+        
             onConnect: () => {
                 console.log('Conectado al Fight Club Broker');
                 setIsConnected(true);
                 setError(null);
-                
-                // Suscribirse al topic de la pelea
+        
                 client.subscribe(`/topic/fight.${fightId}`, (message: any) => {
                     try {
                         const payload = JSON.parse(message.body);
                         console.log('Payload received', payload);
-                        // Actualización completa del estado de la pelea (Fight)
-                        // El backend envía Fight cuando: fightStateUpdate o changeFighters
+        
                         if ("player1" in payload && "player2" in payload) {
                             setGameState(payload as Fight);
                         } 
-                        // Actualización parcial del HelpButton
-                        // El backend envía solo HelpButton cuando: updateHelpButton
-                        // Detectamos por buttonId o status que son únicos del HelpButton
                         else if ("buttonId" in payload || ("status" in payload && !("player1" in payload))) {
                             setGameState(prev => {
                                 if (!prev) return null;
@@ -130,15 +121,18 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
                             });
                             console.log('HelpButton updated', payload);
                         }
+        
                     } catch (parseError) {
                         console.error('Error parseando mensaje WebSocket:', parseError);
                     }
                 });
             },
+        
             onDisconnect: () => {
                 setIsConnected(false);
                 console.log('Desconectado del ring');
             },
+        
             onStompError: (frame: any) => {
                 const errorMsg = frame.headers?.['message'] || 'Error STOMP desconocido';
                 console.error('STOMP Error:', errorMsg);
