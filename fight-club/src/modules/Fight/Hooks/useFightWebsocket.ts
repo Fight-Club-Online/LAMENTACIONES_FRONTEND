@@ -10,7 +10,7 @@ import type {
 } from '../types/fight';
 
 const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
-    'http://localhost:8080';
+    'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
 const WS_ENDPOINT = `${API_URL}/fightService`;
 
 /** Da tiempo a que eventos (p. ej. Rabbit) propaguen la pelea tras iniciar desde lobby */
