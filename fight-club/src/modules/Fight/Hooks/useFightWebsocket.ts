@@ -111,7 +111,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
                 client.subscribe(`/topic/fight.${fightId}`, (message: any) => {
                     try {
                         const payload = JSON.parse(message.body);
-
+                        console.log('Payload received', payload);
                         // Actualización completa del estado de la pelea (Fight)
                         // El backend envía Fight cuando: fightStateUpdate o changeFighters
                         if ("player1" in payload && "player2" in payload) {
@@ -128,6 +128,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
                                     helpButton: payload as HelpButton
                                 };
                             });
+                            console.log('HelpButton updated', payload);
                         }
                     } catch (parseError) {
                         console.error('Error parseando mensaje WebSocket:', parseError);

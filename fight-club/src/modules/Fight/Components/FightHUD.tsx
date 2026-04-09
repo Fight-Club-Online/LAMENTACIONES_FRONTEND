@@ -31,13 +31,13 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
         // El botón PEDIR AYUDA aparece cuando status es ACTIVE y aún no ha sido visible para todos
         const canAskForHelp = helpButton.activatedForUserId === userId && 
                              helpButton.status === 'ACTIVE' && 
-                             !helpButton.isVisible;
+                             !helpButton.visible ;
 
         // El botón de CLAIM (RELEVAR) aparece cuando isVisible es true (para todos)
         // Pero solo si no es el jugador que pidió ayuda y el status es ACTIVE
-        const showClaimButton = helpButton.isVisible && 
+        const showClaimButton = helpButton.visible && 
                                helpButton.status === 'ACTIVE' &&
-                               helpButton.activatedForUserId !== userId;
+                               helpButton.activatedForUserId !== userId ;
 
         // El botón TAKE BACK aparece cuando el status es CLAIMED
         // Solo para el jugador original que pidió ayuda (activatedForUserId)

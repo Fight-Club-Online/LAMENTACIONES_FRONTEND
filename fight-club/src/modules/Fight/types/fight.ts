@@ -30,7 +30,7 @@ export interface Fighter {
     characterLevel?: number;
     characterATK?: number;
     characterDEF?: number;
-    health?: Health; // Opcional hasta que se seleccione personaje
+    health?: Health; 
     skills?: Skill[];
     posX: number;
     posY: number;
@@ -53,7 +53,7 @@ export interface Hitbox {
 
 export interface HelpButton {
     buttonId: number;
-    isVisible: boolean;
+    visible: boolean;
     fightId: string;
     activatedForUserId: string;
     claimedByUserId: string;
