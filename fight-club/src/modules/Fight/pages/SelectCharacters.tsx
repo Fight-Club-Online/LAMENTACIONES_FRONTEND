@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Fight } from '../types/fight';
-import type { UserCharacter } from '../../Lobby/Types/characterTypes';
+import type { Character, UserCharacter } from '../../Lobby/Types/characterTypes';
 import { lobbyApi } from '../../Lobby/Config/axiosLobby';
 import { FooterSelectCharacter } from '../Components/SelectCharacter/footerSC';
 import { HeaderSelectCharacter } from '../Components/SelectCharacter/headerSC';
@@ -55,11 +55,31 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
         const loadCharacters = async () => {
             try {
                 setIsLoadingCharacters(true);
-                const response = await lobbyApi.getUserCharacters(`/characters/user/${userId}`);
-                setCharacters([defaultCharacter]);
+                const response = await lobbyApi.getUserCharacters(userId);
+                console.log("el try:",response)
+                if(response.length === 0){
+                    const response = await lobbyApi.getAllCharacters();
+                    var c: Character =  response[0];
+                    let uC : UserCharacter = {
+                        id : "1",
+                        user: userId,
+                        character: c
+                    }
+                    setCharacters([uC]);        
+                 }else{
+                    setCharacters(response);
+                 }
             } catch (error) {
                 console.error('Error cargando personajes:', error);
-                setCharacters([defaultCharacter]);
+                const response = await lobbyApi.getAllCharacters();
+                console.log(response)
+                var c: Character =  response[0];
+                let uC : UserCharacter = {
+                    id : "1",
+                    user: userId,
+                    character: c
+                }
+                setCharacters([uC]);
             } finally {
                 setIsLoadingCharacters(false);
             }
