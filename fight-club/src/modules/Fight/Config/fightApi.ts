@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Fight, PlayerInputDto } from '../types/fight';
 
 const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
-    'http://localhost:8080';
+    'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
 
 const fightApiAxios = axios.create({
     baseURL: API_URL,
