@@ -13,7 +13,7 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
     if (!gameState) return null;
 
     const calculateHP = (current: number | undefined, max: number | undefined) => {
-        if (!current || !max || max === 0) return 100; // Default 100% si no hay datos
+        if (!current || !max || max === 0) return 100;
         return (current / max) * 100;
     };
 
