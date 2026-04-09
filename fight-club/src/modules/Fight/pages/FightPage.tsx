@@ -6,6 +6,7 @@ import { useKeyboardControls } from '../Hooks/useKeyboardControls';
 import ArenaCanvas from '../Components/ArenaCanvas';
 import FightHUD from '../Components/FightHUD';
 import { SelectCharacters } from './SelectCharacters';
+import { FightResultScreen } from '../Components/FightResultScreen';
 
 type FightPageInnerProps = {
     fightId: string;
@@ -211,32 +212,11 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
 
             {/* Overlay de Victoria/Derrota */}
             {fightResult && (
-                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50 animate-fadeIn">
-                    <h2 className={`text-8xl font-black italic mb-4 drop-shadow-lg ${
-                        fightResult === 'WIN' ? 'text-green-500' : 
-                        fightResult === 'LOSE' ? 'text-red-500' : 
-                        'text-yellow-500'
-                    }`}>
-                        {fightResult === 'WIN' ? 'VICTORIA' : 
-                         fightResult === 'LOSE' ? 'DERROTA' : 
-                         'EMPATE'}
-                    </h2>
-                    <p className="text-white text-2xl mb-8">K.O.</p>
-                    <div className="flex gap-4">
-                        <button 
-                            onClick={() => navigate('/lobby')}
-                            className="bg-white text-black px-8 py-3 font-bold hover:bg-zinc-200 transition-colors rounded"
-                        >
-                            VOLVER AL LOBBY
-                        </button>
-                        <button 
-                            onClick={() => window.location.reload()}
-                            className="bg-red-600 text-white px-8 py-3 font-bold hover:bg-red-500 transition-colors rounded"
-                        >
-                            REVANCHA
-                        </button>
-                    </div>
-                </div>
+                <FightResultScreen
+                result={fightResult}
+                gameState={gameState}
+                userId={userId}
+                />
             )}
         </main>
     );
