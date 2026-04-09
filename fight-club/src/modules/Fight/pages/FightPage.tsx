@@ -19,7 +19,7 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
     useKeyboardControls(sendAction, !!gameState?.active);
 
     const fightPhase = useMemo(() => {
-        if (!gameState) return 'loading';
+        if (!gameState || !gameState.player1 || !gameState.player2) return 'loading';
         const bothReady = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
         if (!gameState.active && !bothReady) return 'character-selection';
         if (!gameState.active && bothReady) return 'ready-to-start';
@@ -28,8 +28,8 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
 
     const fightResult = useMemo(() => {
         if (!gameState || gameState.active) return null;
-        const p1 = gameState.player1.health;
-        const p2 = gameState.player2.health;
+        const p1 = gameState.player1?.health;
+        const p2 = gameState.player2?.health;
         if (!p1 || !p2) return null;
 
         const p1Dead = p1.currentHealth <= 0;
@@ -41,25 +41,41 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
     }, [gameState, userId]);
 
     // Pantalla de Carga Estética
-    if (isLoading && !gameState) return (
+    if ((isLoading && !gameState) || fightPhase === 'loading') return (
         <div className="h-screen bg-zinc-950 flex flex-col items-center justify-center">
             <div className="w-20 h-1 bg-red-600 animate-pulse mb-4" />
-            <h1 className="text-white text-3xl font-black italic tracking-tighter animate-bounce">ENTRANDO A LA ARENA...</h1>
+            <h1 className="text-white text-3xl font-black italic tracking-tighter animate-bounce text-center px-4">
+                ENTRANDO A LA ARENA...
+            </h1>
+        </div>
+    );
+
+    // Manejo de Error de Conexión
+    if (error) return (
+        <div className="h-screen bg-zinc-950 flex flex-col items-center justify-center text-center p-6">
+            <h2 className="text-red-500 text-2xl font-black mb-4 uppercase">Error de Sincronización</h2>
+            <p className="text-zinc-400 mb-8 max-w-md">{error}</p>
+            <button onClick={() => navigate('/lobby')} className="px-8 py-3 bg-white text-black font-bold uppercase hover:bg-zinc-200 transition-colors">
+                Volver al Lobby
+            </button>
         </div>
     );
 
     // Selección de personajes
     if (fightPhase === 'character-selection' || fightPhase === 'ready-to-start') return (
         <SelectCharacters 
-            gameState={gameState!} userId={userId} isConnected={isConnected}
-            onSelectCharacter={selectCharacter} onStartFight={startFight} 
+            gameState={gameState!} 
+            userId={userId} 
+            isConnected={isConnected}
+            onSelectCharacter={selectCharacter} 
+            onStartFight={startFight} 
         />
     );
 
     return (
         <main className="relative h-screen w-screen bg-black flex flex-col items-center overflow-hidden font-sans">
             
-            {/* 1. FONDO DE AMBIENTE: Expande la imagen a toda la pantalla con desenfoque */}
+            {/* 1. FONDO DE AMBIENTE */}
             <div className="absolute inset-0 z-0">
                 <img 
                     src={backgroundImage} 
@@ -69,7 +85,7 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
             </div>
 
-            {/* 2. STATUS DE CONEXIÓN: Minimalista en la esquina */}
+            {/* 2. STATUS DE CONEXIÓN */}
             <div className="absolute top-4 right-6 flex items-center gap-2 z-50 bg-black/40 px-3 py-1 rounded-full border border-white/10">
                 <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
                 <span className="text-[10px] uppercase font-bold text-zinc-300 tracking-tighter">
@@ -77,15 +93,19 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                 </span>
             </div>
 
-            {/* 3. HUD SUPERIOR: Vidas y VS */}
+            {/* 3. HUD SUPERIOR */}
             <div className="relative z-30 w-full max-w-7xl mt-6 px-8">
                 <FightHUD 
-                    gameState={gameState} userId={userId} onStart={startFight}
-                    onHelp={askForHelp} onClaim={claimHelp} onTakeBack={takeBack}
+                    gameState={gameState} 
+                    userId={userId} 
+                    onStart={startFight}
+                    onHelp={askForHelp} 
+                    onClaim={claimHelp} 
+                    onTakeBack={takeBack}
                 />
             </div>
 
-            {/* 4. ÁREA DE COMBATE (CANVAS): Expandida y centrada */}
+            {/* 4. ÁREA DE COMBATE (CANVAS) */}
             <div className="relative z-20 flex-1 w-full flex items-center justify-center p-4 md:p-12 mb-10">
                 <div className={`relative w-full max-w-6xl aspect-video transition-all duration-700 transform 
                     ${fightResult ? 'scale-95 blur-[2px] grayscale-[0.5]' : 'scale-100'}
@@ -93,12 +113,12 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                 >
                     <ArenaCanvas gameState={gameState} />
                     
-                    {/* Overlay de "Scanlines" para estilo retro */}
+                    {/* Overlay de "Scanlines" */}
                     <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_4px,3px_100%]" />
                 </div>
             </div>
 
-            {/* 5. CONTROLES MOBILE: Estilo Gamepad */}
+            {/* 5. CONTROLES MOBILE */}
             <div className="absolute bottom-6 inset-x-6 flex justify-between items-end md:hidden z-40 pointer-events-none">
                 <div className="grid grid-cols-3 gap-1 pointer-events-auto opacity-80">
                     <div />
@@ -115,40 +135,42 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                 </div>
             </div>
 
-            {/* 6. OVERLAY DE RESULTADO: Diseño Agresivo */}
+            {/* 6. OVERLAY DE RESULTADO (Corregido con Fragment) */}
             {fightResult && (
-                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] animate-in fade-in zoom-in duration-500 backdrop-blur-sm">
-                    <div className="relative group">
-                        <h2 className={`text-8xl md:text-9xl font-black italic tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,1)] ${
-                            fightResult === 'WIN' ? 'text-green-500' : fightResult === 'LOSE' ? 'text-red-600' : 'text-yellow-500'
-                        }`}>
-                            {fightResult === 'WIN' ? 'VICTORY' : fightResult === 'LOSE' ? 'DEFEATED' : 'DRAW'}
-                        </h2>
-                        <div className="absolute -top-10 -right-10 bg-white text-black px-6 py-2 font-black -rotate-12 text-3xl border-4 border-black animate-bounce">
-                            K.O.
+                <>
+                    <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] animate-in fade-in zoom-in duration-500 backdrop-blur-sm">
+                        <div className="relative group">
+                            <h2 className={`text-8xl md:text-9xl font-black italic tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,1)] ${
+                                fightResult === 'WIN' ? 'text-green-500' : fightResult === 'LOSE' ? 'text-red-600' : 'text-yellow-500'
+                            }`}>
+                                {fightResult === 'WIN' ? 'VICTORY' : fightResult === 'LOSE' ? 'DEFEATED' : 'DRAW'}
+                            </h2>
+                            <div className="absolute -top-10 -right-10 bg-white text-black px-6 py-2 font-black -rotate-12 text-3xl border-4 border-black animate-bounce">
+                                K.O.
+                            </div>
+                        </div>
+
+                        <div className="mt-16 flex flex-col md:flex-row gap-6">
+                            <button 
+                                onClick={() => navigate('/lobby')} 
+                                className="px-12 py-4 bg-zinc-100 text-black font-black uppercase tracking-tighter hover:bg-white transition-all transform hover:-translate-y-1 active:translate-y-0"
+                            >
+                                Back to Lobby
+                            </button>
+                            <button 
+                                onClick={() => window.location.reload()} 
+                                className="px-12 py-4 bg-red-600 text-white font-black uppercase tracking-tighter hover:bg-red-500 shadow-[0_10px_20px_rgba(220,38,38,0.4)] transition-all transform hover:-translate-y-1 active:translate-y-0"
+                            >
+                                Rematch
+                            </button>
                         </div>
                     </div>
-
-                    <div className="mt-16 flex flex-col md:flex-row gap-6">
-                        <button 
-                            onClick={() => navigate('/lobby')} 
-                            className="px-12 py-4 bg-zinc-100 text-black font-black uppercase tracking-tighter hover:bg-white transition-all transform hover:-translate-y-1 active:translate-y-0"
-                        >
-                            Back to Lobby
-                        </button>
-                        <button 
-                            onClick={() => window.location.reload()} 
-                            className="px-12 py-4 bg-red-600 text-white font-black uppercase tracking-tighter hover:bg-red-500 shadow-[0_10px_20px_rgba(220,38,38,0.4)] transition-all transform hover:-translate-y-1 active:translate-y-0"
-                        >
-                            Rematch
-                        </button>
-                    </div>
-                </div>
-                <FightResultScreen
-                result={fightResult}
-                gameState={gameState}
-                userId={userId}
-                />
+                    <FightResultScreen
+                        result={fightResult}
+                        gameState={gameState!}
+                        userId={userId}
+                    />
+                </>
             )}
         </main>
     );
@@ -160,3 +182,5 @@ export const FightPage: React.FC = () => {
     if (!userId) return <Navigate to="/login" replace />;
     return <FightPageInner fightId={fightId ?? ''} userId={userId} />;
 };
+
+export default FightPage;
