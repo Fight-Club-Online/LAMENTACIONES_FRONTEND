@@ -65,9 +65,9 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                         user: userId,
                         character: c
                     }
-                    setCharacters([uC]);        
+                    setCharacters([defaultCharacter]);        
                  }else{
-                    setCharacters(response);
+                    setCharacters([defaultCharacter]);
                  }
             } catch (error) {
                 console.error('Error cargando personajes:', error);
@@ -79,7 +79,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                     user: userId,
                     character: c
                 }
-                setCharacters([uC]);
+                setCharacters([defaultCharacter]);
             } finally {
                 setIsLoadingCharacters(false);
             }
