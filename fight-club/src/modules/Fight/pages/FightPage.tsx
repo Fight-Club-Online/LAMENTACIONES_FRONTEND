@@ -7,6 +7,7 @@ import ArenaCanvas from '../Components/ArenaCanvas';
 import FightHUD from '../Components/FightHUD';
 import { SelectCharacters } from './SelectCharacters';
 import backgroundImage from '../../../assets/Background.jpeg';
+import { FightResultScreen } from '../Components/FightResultScreen';
 
 const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId, userId }) => {
     const navigate = useNavigate();
@@ -143,6 +144,11 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                         </button>
                     </div>
                 </div>
+                <FightResultScreen
+                result={fightResult}
+                gameState={gameState}
+                userId={userId}
+                />
             )}
         </main>
     );
