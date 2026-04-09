@@ -13,6 +13,9 @@ const FIGHTER_WIDTH = 60;
 const FIGHTER_HEIGHT = 120;
 const GROUND_Y = CANVAS_HEIGHT - 50; // Línea del suelo
 
+// Interpolación config
+const LERP_SPEED = 0.25; // 0.1 = suave, 0.5 = rápido, 1 = sin interpolación
+
 // Colores para cada acción
 const ACTION_COLORS: Record<FighterAction, string> = {
     IDLE: '#3b82f6',        // Azul
@@ -26,21 +29,45 @@ const ACTION_COLORS: Record<FighterAction, string> = {
     DEAD: '#4b5563',        // Gris
 };
 
+// Tipo para posiciones interpoladas
+interface InterpolatedPosition {
+    x: number;
+    y: number;
+}
+
+// Función de interpolación lineal
+const lerp = (current: number, target: number, speed: number): number => {
+    return current + (target - current) * speed;
+};
+
 const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameRef = useRef<number>(0);
     const backgroundRef = useRef<HTMLImageElement | null>(null);
+    
+    // Posiciones visuales interpoladas (separadas del estado del servidor)
+    const visualPositionsRef = useRef<{
+        player1: InterpolatedPosition;
+        player2: InterpolatedPosition;
+        initialized: boolean;
+    }>({
+        player1: { x: 100, y: GROUND_Y - FIGHTER_HEIGHT },
+        player2: { x: CANVAS_WIDTH - 160, y: GROUND_Y - FIGHTER_HEIGHT },
+        initialized: false
+    });
 
     /**
      * Dibuja un fighter con indicadores visuales de su estado
+     * Usa posiciones interpoladas para movimiento suave
      */
     const drawFighter = useCallback((
         ctx: CanvasRenderingContext2D, 
         fighter: Fighter, 
+        visualPos: InterpolatedPosition,
         isPlayer1: boolean
     ) => {
-        const x = fighter.posX;
-        const y = fighter.posY;
+        const x = visualPos.x;
+        const y = visualPos.y;
         const baseColor = isPlayer1 ? '#3b82f6' : '#ef4444';
         const actionColor = ACTION_COLORS[fighter.currentAction] || baseColor;
 
@@ -178,9 +205,26 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
             drawArena(ctx);
 
             if (gameState) {
-                // Dibujar fighters
-                drawFighter(ctx, gameState.player1, true);
-                drawFighter(ctx, gameState.player2, false);
+                const vp = visualPositionsRef.current;
+                
+                // Inicializar posiciones visuales en el primer frame
+                if (!vp.initialized) {
+                    vp.player1.x = gameState.player1.posX;
+                    vp.player1.y = gameState.player1.posY;
+                    vp.player2.x = gameState.player2.posX;
+                    vp.player2.y = gameState.player2.posY;
+                    vp.initialized = true;
+                }
+                
+                // Interpolar posiciones hacia el objetivo del servidor
+                vp.player1.x = lerp(vp.player1.x, gameState.player1.posX, LERP_SPEED);
+                vp.player1.y = lerp(vp.player1.y, gameState.player1.posY, LERP_SPEED);
+                vp.player2.x = lerp(vp.player2.x, gameState.player2.posX, LERP_SPEED);
+                vp.player2.y = lerp(vp.player2.y, gameState.player2.posY, LERP_SPEED);
+
+                // Dibujar fighters con posiciones interpoladas
+                drawFighter(ctx, gameState.player1, vp.player1, true);
+                drawFighter(ctx, gameState.player2, vp.player2, false);
 
                 // Info de debug (puedes comentar esto en producción)
                 // drawDebugInfo(ctx, gameState);
