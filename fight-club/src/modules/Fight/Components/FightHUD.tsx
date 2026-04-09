@@ -60,7 +60,7 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
 
             {/* Panel de Control Central (Botones Interactivos) */}
             <div className="mt-10 pointer-events-auto flex gap-4">
-                {!gameState.isActive && (
+                {!gameState.active && (
                     <button 
                         onClick={onStart}
                         className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-3 rounded italic uppercase border-b-4 border-green-800 transition-transform active:scale-95"
@@ -70,7 +70,7 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
                 )}
 
                 {/* Lógica del HelpButton */}
-                {gameState.helpButton?.visible && (
+                {gameState.helpButton?.isVisible && (
                     <div className="flex gap-4 animate-bounce">
                         <button 
                             onClick={onHelp}

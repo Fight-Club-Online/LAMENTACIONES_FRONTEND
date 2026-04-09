@@ -29,7 +29,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
 
     // Conectamos los controles de teclado al websocket
     // Solo activos si la pelea está en progreso
-    useKeyboardControls(sendAction, !!gameState?.isActive);
+    useKeyboardControls(sendAction, !!gameState?.active);
 
     // Determinar la fase actual de la pelea
     const fightPhase = useMemo(() => {
@@ -38,12 +38,12 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         // Si la pelea no está activa y algún jugador no tiene personaje -> selección
         const bothHaveCharacters = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
         
-        if (!gameState.isActive && !bothHaveCharacters) {
+        if (!gameState.active && !bothHaveCharacters) {
             return 'character-selection';
         }
         
         // Si ambos tienen personaje pero la pelea no está activa -> listo para empezar
-        if (!gameState.isActive && bothHaveCharacters) {
+        if (!gameState.active && bothHaveCharacters) {
             return 'ready-to-start';
         }
         
@@ -54,7 +54,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     // Determinar el resultado de la pelea
     // Solo evaluar si ambos fighters tienen health (personaje seleccionado)
     const fightResult = useMemo(() => {
-        if (!gameState || gameState.isActive) return null;
+        if (!gameState || gameState.active) return null;
         
         // No evaluar resultado si los fighters no tienen health aún
         if (!gameState.player1.health || !gameState.player2.health) return null;

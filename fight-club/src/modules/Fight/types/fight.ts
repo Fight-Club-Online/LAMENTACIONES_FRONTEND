@@ -69,7 +69,7 @@ export interface Fight {
     id: string;
     player1: Fighter;
     player2: Fighter;
-    isActive: boolean;
+    active: boolean;
     helpButton: HelpButton;
     spectators?: Player[]; 
 }

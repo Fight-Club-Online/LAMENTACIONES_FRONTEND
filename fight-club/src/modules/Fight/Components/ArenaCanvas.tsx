@@ -143,7 +143,7 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
 
         ctx.fillText(`P1: (${Math.round(gameState.player1.posX)}, ${Math.round(gameState.player1.posY)})`, 10, 20);
         ctx.fillText(`P2: (${Math.round(gameState.player2.posX)}, ${Math.round(gameState.player2.posY)})`, 10, 35);
-        ctx.fillText(`Active: ${gameState.isActive ? 'YES' : 'NO'}`, 10, 50);
+        ctx.fillText(`Active: ${gameState.active ? 'YES' : 'NO'}`, 10, 50);
     }, []);
 
     useEffect(() => {
@@ -186,7 +186,7 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
                 // drawDebugInfo(ctx, gameState);
 
                 // Overlay si la pelea no está activa
-                if (!gameState.isActive) {
+                if (!gameState.active) {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
