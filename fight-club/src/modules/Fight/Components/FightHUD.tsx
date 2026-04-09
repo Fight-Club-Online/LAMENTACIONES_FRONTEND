@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { Fight } from '../types/fight';
 
 interface Props {
@@ -7,9 +7,10 @@ interface Props {
     onStart: () => void;
     onHelp: () => void;
     onClaim: () => void;
+    onTakeBack: () => void;
 }
 
-const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim }) => {
+const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim, onTakeBack }) => {
     if (!gameState) return null;
 
     const calculateHP = (current: number | undefined, max: number | undefined) => {
@@ -20,6 +21,37 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
     // Verificar si los fighters tienen health (personaje seleccionado)
     const p1Health = gameState.player1.health;
     const p2Health = gameState.player2.health;
+
+    // Lógica del botón de ayuda
+    const helpButtonState = useMemo(() => {
+        const helpButton = gameState.helpButton;
+        if (!helpButton) return { showAskHelp: false, showClaim: false, showTakeBack: false };
+
+        // Verificar si este jugador está en poca vida (activatedForUserId es el que puede pedir ayuda)
+        // El botón PEDIR AYUDA aparece cuando status es ACTIVE y aún no ha sido visible para todos
+        const canAskForHelp = helpButton.activatedForUserId === userId && 
+                             helpButton.status === 'ACTIVE' && 
+                             !helpButton.isVisible;
+
+        // El botón de CLAIM (RELEVAR) aparece cuando isVisible es true (para todos)
+        // Pero solo si no es el jugador que pidió ayuda y el status es ACTIVE
+        const showClaimButton = helpButton.isVisible && 
+                               helpButton.status === 'ACTIVE' &&
+                               helpButton.activatedForUserId !== userId;
+
+        // El botón TAKE BACK aparece cuando el status es CLAIMED
+        // Solo para el jugador original que pidió ayuda (activatedForUserId)
+        const showTakeBack = helpButton.status === 'CLAIMED' &&
+                            helpButton.activatedForUserId === userId;
+
+        return {
+            showAskHelp: canAskForHelp,
+            showClaim: showClaimButton,
+            showTakeBack: showTakeBack,
+            status: helpButton.status,
+            claimedBy: helpButton.claimedByUserId
+        };
+    }, [gameState.helpButton, userId]);
 
     return (
         <div className="absolute inset-0 p-8 flex flex-col items-center pointer-events-none">
@@ -70,20 +102,38 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
                 </div>
             )}
 
-            {/* Botón de Ayuda - Centro Inferior */}
-            {gameState.helpButton?.isVisible && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto flex gap-4 animate-bounce">
+            {/* Botón PEDIR AYUDA - Solo para el jugador con poca vida */}
+            {helpButtonState.showAskHelp && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto animate-bounce">
                     <button 
                         onClick={onHelp}
-                        className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-6 py-3 rounded uppercase border-b-4 border-yellow-700 transition-transform active:scale-95"
+                        className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-8 py-4 rounded-lg uppercase border-b-4 border-yellow-700 transition-transform active:scale-95 text-lg shadow-lg shadow-yellow-500/30"
                     >
                         PEDIR AYUDA
                     </button>
+                </div>
+            )}
+
+            {/* Botón RELEVAR - Para espectadores y oponente cuando isVisible es true */}
+            {helpButtonState.showClaim && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto animate-pulse">
                     <button 
                         onClick={onClaim}
-                        className="bg-purple-600 hover:bg-purple-500 text-white font-black px-6 py-3 rounded uppercase border-b-4 border-purple-900 transition-transform active:scale-95"
+                        className="bg-purple-600 hover:bg-purple-500 text-white font-black px-8 py-4 rounded-lg uppercase border-b-4 border-purple-900 transition-transform active:scale-95 text-lg shadow-lg shadow-purple-500/30"
                     >
                         RELEVAR
+                    </button>
+                </div>
+            )}
+
+            {/* Botón RETOMAR CONTROL - Para el jugador original después de 10 segundos */}
+            {helpButtonState.showTakeBack && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto animate-bounce">
+                    <button 
+                        onClick={onTakeBack}
+                        className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-4 rounded-lg uppercase border-b-4 border-green-800 transition-transform active:scale-95 text-lg shadow-lg shadow-green-500/30"
+                    >
+                        RETOMAR CONTROL
                     </button>
                 </div>
             )}

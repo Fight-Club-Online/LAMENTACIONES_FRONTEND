@@ -33,6 +33,7 @@ export interface FightWebsocketState {
     startFight: () => Promise<void>;
     askForHelp: () => void;
     claimHelp: () => void;
+    takeBack: () => void;
 }
 
 export const useFightWebsocket = (fightId: string, userId: string): FightWebsocketState => {
@@ -226,6 +227,18 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     }, [fightId, userId]);
 
     /**
+     * Retoma el control después de que el helper ayudó (después de 10 segundos)
+     */
+    const takeBack = useCallback(() => {
+        if (stompClient.current?.connected) {
+            stompClient.current.publish({
+                destination: `/fightService/fight/${fightId}/takeBack`,
+                body: userId
+            });
+        }
+    }, [fightId, userId]);
+
+    /**
      * Inicia la pelea (cambia isActive a true)
      */
     const startFight = useCallback(async () => {
@@ -252,6 +265,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
         selectCharacter,
         startFight, 
         askForHelp, 
-        claimHelp 
+        claimHelp,
+        takeBack
     };
 };

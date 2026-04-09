@@ -24,7 +24,8 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         selectCharacter,
         startFight, 
         askForHelp, 
-        claimHelp 
+        claimHelp,
+        takeBack
     } = useFightWebsocket(fightId || '', userId);
 
     // Conectamos los controles de teclado al websocket
@@ -144,6 +145,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                 onStart={startFight}
                 onHelp={askForHelp}
                 onClaim={claimHelp}
+                onTakeBack={takeBack}
             />
 
             {/* Canvas: El Juego */}
