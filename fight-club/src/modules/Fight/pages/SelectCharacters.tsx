@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import type { Fight } from '../types/fight';
 import type { Character, UserCharacter } from '../../Lobby/Types/characterTypes';
+import { 
+  characterToUserCharacter, 
+  getCharacterId,
+  getCharacterName,
+  getCharacterLevel,
+  getCharacterATK,
+  getCharacterDEF,
+  getCharacterImg,
+} from '../../Lobby/Types/characterHelpers';
 import { lobbyApi } from '../../Lobby/Config/axiosLobby';
 import { FooterSelectCharacter } from '../Components/SelectCharacter/footerSC';
 import { HeaderSelectCharacter } from '../Components/SelectCharacter/headerSC';
+
+const AZURE_BACKEND_URL = 'https://lobbyservices-f7dghrebachxetg4.mexicocentral-01.azurewebsites.net';
+
+// Helper function to fix asset URLs from localhost to Azure
+const fixAssetUrl = (url: string | undefined): string | undefined => {
+    if (url && url.includes('localhost:8080')) {
+        return url.replace('http://localhost:8080', AZURE_BACKEND_URL);
+    }
+    return url;
+};
 
 interface SelectCharactersProps {
     gameState: Fight;
@@ -13,19 +32,16 @@ interface SelectCharactersProps {
     onStartFight: () => void;
 }
 
- const defaultCharacter: UserCharacter = {
-    id: "uc-001",
-    user: "usuario123",
-    character: {
-      characterId: 1,
-      characterLevel: 10,
-      characterName: "Guerrero Arcano",
-      characterHp: "1500",
-      characterATK: "250",
-      characterDEF: "180",
-      characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
-    },
-  };
+const defaultCharacter: UserCharacter = {
+    userId: "usuario123",
+    characterId: 1,
+    characterLevel: 10,
+    characterName: "Guerrero Arcano",
+    characterHp: "1500",
+    characterATK: "250",
+    characterDEF: "180",
+    characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
+};
 
 
 
@@ -39,6 +55,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     const [characters, setCharacters] = useState<UserCharacter[]>([]);
     const [isLoadingCharacters, setIsLoadingCharacters] = useState(true);
     const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
+    const [opponentAssets, setOpponentAssets] = useState<any>(null);
 
     // Determinar si este usuario es player1 o player2
     const isPlayer1 = gameState.player1.userId === userId;
@@ -57,29 +74,49 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                 setIsLoadingCharacters(true);
                 const response = await lobbyApi.getUserCharacters(userId);
                 console.log("el try:",response)
+                
                 if(response.length === 0){
-                    const response = await lobbyApi.getAllCharacters();
-                    var c: Character =  response[0];
-                    let uC : UserCharacter = {
-                        id : "1",
-                        user: userId,
-                        character: c
-                    }
-                    setCharacters([defaultCharacter]);        
-                 }else{
-                    setCharacters([defaultCharacter]);
-                 }
+                    const allCharacters = await lobbyApi.getAllCharacters();
+                    const firstChar: Character = allCharacters[0];
+                    const userChar = characterToUserCharacter(firstChar, userId);
+                    setCharacters([userChar]);        
+                }else{
+                    // Cargar assets para cada personaje y convertir URLs
+                    const charactersWithAssets = await Promise.all(
+                        response.map(async (char) => {
+                            try {
+                                const charId = getCharacterId(char);
+                                const assets = await lobbyApi.getUserCharacterAssets(userId, charId.toString());
+                                
+                                // Convertir URLs de localhost a Azure
+                                const fixedAssets = {
+                                    idle_url: fixAssetUrl(assets.idle_url),
+                                    run_url: fixAssetUrl(assets.run_url),
+                                    attack_url: fixAssetUrl(assets.attack_url),
+                                    hurt_url: fixAssetUrl(assets.hurt_url)
+                                };
+                                
+                                return { ...char, assets: fixedAssets };
+                            } catch (error) {
+                                console.error(`Error fetching assets for ${getCharacterName(char)}:`, error);
+                                return char;
+                            }
+                        })
+                    );
+                    setCharacters(charactersWithAssets);
+                }
             } catch (error) {
                 console.error('Error cargando personajes:', error);
-                const response = await lobbyApi.getAllCharacters();
-                console.log(response)
-                var c: Character =  response[0];
-                let uC : UserCharacter = {
-                    id : "1",
-                    user: userId,
-                    character: c
+                try {
+                    const allCharacters = await lobbyApi.getAllCharacters();
+                    console.log(allCharacters)
+                    const firstChar: Character = allCharacters[0];
+                    const userChar = characterToUserCharacter(firstChar, userId);
+                    setCharacters([userChar]);
+                } catch (fallbackError) {
+                    console.error('Error en fallback:', fallbackError);
+                    setCharacters([defaultCharacter]);
                 }
-                setCharacters([defaultCharacter]);
             } finally {
                 setIsLoadingCharacters(false);
             }
@@ -94,6 +131,37 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
             setSelectedCharacterId(currentPlayer.characterId);
         }
     }, [currentPlayer.hasCharacter, currentPlayer.characterId]);
+
+    // Cargar datos del oponente cuando selecciona personaje
+    useEffect(() => {
+        const loadOpponentCharacter = async () => {
+            if (opponent.hasCharacter && opponent.characterId && opponent.userId) {
+                try {
+                    console.log('Cargando assets del oponente:', opponent.userId, opponent.characterId);
+                    const assets = await lobbyApi.getUserCharacterAssets(opponent.userId, opponent.characterId.toString());
+                    console.log('Assets oponente:', assets);
+                    
+                    // Convertir URLs de localhost a Azure
+                    const fixedAssets = {
+                        idle_url: fixAssetUrl(assets.idle_url),
+                        run_url: fixAssetUrl(assets.run_url),
+                        attack_url: fixAssetUrl(assets.attack_url),
+                        hurt_url: fixAssetUrl(assets.hurt_url)
+                    };
+                    
+                    console.log('Assets convertidos:', fixedAssets);
+                    setOpponentAssets(fixedAssets);
+                } catch (error) {
+                    console.error('Error cargando assets del oponente:', error);
+                    setOpponentAssets(null);
+                }
+            } else {
+                console.log('No se cumplen las condiciones para cargar assets. Oponente:', opponent);
+            }
+        };
+        
+        loadOpponentCharacter();
+    }, [opponent.hasCharacter, opponent.characterId, opponent.userId]);
 
     const handleSelectCharacter = (characterId: number) => {
         if (currentPlayerReady) return; 
@@ -131,14 +199,14 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {characters.map((char) => (
+                            {characters.map((char: UserCharacter) => (
                                 <button
-                                    key={char.character.characterId}
-                                    onClick={() => handleSelectCharacter(char.character.characterId)}
+                                    key={getCharacterId(char)}
+                                    onClick={() => handleSelectCharacter(Number(getCharacterId(char)))}
                                     disabled={currentPlayerReady}
                                     className={`
                                         relative p-4 rounded-lg border-2 transition-all
-                                        ${selectedCharacterId === char.character.characterId
+                                        ${selectedCharacterId === getCharacterId(char)
                                             ? 'border-red-500 bg-red-500/20 scale-105'
                                             : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
                                         }
@@ -147,29 +215,26 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                 >
                                     {/* Imagen del personaje */}
                                     <div className="aspect-square bg-zinc-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                                        {char.character.characterImg ? (
-                                            <img 
-                                                src={char.character.characterImg} 
-                                                alt={char.character.characterName}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-4xl text-zinc-600">?</span>
-                                        )}
+                                        <div
+                                            className="sprite-select sprite-idle"
+                                            style={{
+                                                backgroundImage: `url(${fixAssetUrl(char.assets?.idle_url as string) || getCharacterImg(char) || 'https://via.placeholder.com/32x64'})`
+                                            }}
+                                        />
                                     </div>
 
                                     {/* Info del personaje */}
-                                    <h3 className="font-bold text-white text-sm truncate">{char.character.characterName}</h3>
-                                    <p className="text-xs text-zinc-400">Nivel {char.character.characterLevel}</p>
+                                    <h3 className="font-bold text-white text-sm truncate">{getCharacterName(char)}</h3>
+                                    <p className="text-xs text-zinc-400">Nivel {getCharacterLevel(char)}</p>
 
                                     {/* Stats */}
                                     <div className="mt-2 flex gap-2 text-xs">
-                                        <span className="text-red-400">ATK:{char.character.characterATK}</span>
-                                        <span className="text-blue-400">DEF:{char.character.characterDEF}</span>
+                                        <span className="text-red-400">ATK:{getCharacterATK(char)}</span>
+                                        <span className="text-blue-400">DEF:{getCharacterDEF(char)}</span>
                                     </div>
 
                                     {/* Indicador de seleccionado */}
-                                    {selectedCharacterId === char.character.characterId && (
+                                    {selectedCharacterId === getCharacterId(char) && (
                                         <div className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -219,8 +284,13 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                         `}>
                             {opponent.hasCharacter ? (
                                 <div className="text-center">
-                                    <div className="w-32 h-32 mx-auto bg-zinc-800 rounded-lg mb-4 flex items-center justify-center">
-                                        <span className="text-6xl text-zinc-600">?</span>
+                                    <div className="w-32 h-32 mx-auto bg-zinc-800 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                                        <div
+                                            className="sprite-select sprite-idle"
+                                            style={{
+                                                backgroundImage: `url(${opponentAssets?.idle_url || 'https://via.placeholder.com/32x64'})`
+                                            }}
+                                        />
                                     </div>
                                     <h3 className="text-xl font-bold text-white">{opponent.characterName || 'Personaje Seleccionado'}</h3>
                                     <p className="text-zinc-400 mt-1">Nivel {opponent.characterLevel || '?'}</p>

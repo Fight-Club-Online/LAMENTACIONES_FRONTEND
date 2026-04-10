@@ -14,129 +14,116 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
     if (!gameState) return null;
 
     const calculateHP = (current: number | undefined, max: number | undefined) => {
-        if (!current || !max || max === 0) return 100;
-        return (current / max) * 100;
+        if (current === undefined || !max || max === 0) return 100;
+        return Math.max(0, (current / max) * 100);
     };
 
-    // Verificar si los fighters tienen health (personaje seleccionado)
-    const p1Health = gameState.player1.health;
-    const p2Health = gameState.player2.health;
+    const p1HP = calculateHP(gameState.player1.health?.currentHealth, gameState.player1.health?.maxHealth);
+    const p2HP = calculateHP(gameState.player2.health?.currentHealth, gameState.player2.health?.maxHealth);
 
-    // Lógica del botón de ayuda
     const helpButtonState = useMemo(() => {
         const helpButton = gameState.helpButton;
         if (!helpButton) return { showAskHelp: false, showClaim: false, showTakeBack: false };
 
-        // Verificar si este jugador está en poca vida (activatedForUserId es el que puede pedir ayuda)
-        // El botón PEDIR AYUDA aparece cuando status es ACTIVE y aún no ha sido visible para todos
-        const canAskForHelp = helpButton.activatedForUserId === userId && 
-                             helpButton.status === 'ACTIVE' && 
-                             !helpButton.visible ;
+        const canAskForHelp = helpButton.activatedForUserId === userId && helpButton.status === 'ACTIVE' && !helpButton.visible;
+        const showClaimButton = helpButton.visible && helpButton.status === 'ACTIVE' && helpButton.activatedForUserId !== userId;
+        const showTakeBack = helpButton.status === 'CLAIMED' && helpButton.activatedForUserId === userId;
 
-        // El botón de CLAIM (RELEVAR) aparece cuando isVisible es true (para todos)
-        // Pero solo si no es el jugador que pidió ayuda y el status es ACTIVE
-        const showClaimButton = helpButton.visible && 
-                               helpButton.status === 'ACTIVE' &&
-                               helpButton.activatedForUserId !== userId ;
-
-        // El botón TAKE BACK aparece cuando el status es CLAIMED
-        // Solo para el jugador original que pidió ayuda (activatedForUserId)
-        const showTakeBack = helpButton.status === 'CLAIMED' &&
-                            helpButton.activatedForUserId === userId;
-
-        return {
-            showAskHelp: canAskForHelp,
-            showClaim: showClaimButton,
-            showTakeBack: showTakeBack,
-            status: helpButton.status,
-            claimedBy: helpButton.claimedByUserId
-        };
+        return { showAskHelp: canAskForHelp, showClaim: showClaimButton, showTakeBack: showTakeBack };
     }, [gameState.helpButton, userId]);
 
     return (
-        <div className="absolute inset-0 p-8 flex flex-col items-center pointer-events-none">
-            {/* Contenedor de Barras de Vida */}
-            <div className="w-full max-w-5xl flex justify-between items-center gap-4">
+        <div className="absolute inset-0 p-6 flex flex-col items-center pointer-events-none select-none">
+            
+            {/* --- TOP BAR: HEALTH & VS --- */}
+            <div className="w-full max-w-6xl flex justify-between items-start gap-2 italic">
                 
-                {/* Player 1 HUD */}
-                <div className="flex-1 flex flex-col items-end">
-                    <span className="text-white font-black italic text-xl mb-1 drop-shadow-md uppercase">
-                        {gameState.player1.characterName || 'Jugador 1'}
-                    </span>
-                    <div className="w-full h-8 bg-gray-900 border-2 border-white skew-x-[-15deg] overflow-hidden">
+                {/* Player 1 */}
+                <div className="flex-1">
+                    <div className="flex justify-between items-end mb-1 px-2">
+                        <span className="text-white font-black text-2xl tracking-tighter drop-shadow-[0_2px_2px_rgba(0,0,0,1)] uppercase">
+                            {gameState.player1.characterName || 'P1'}
+                        </span>
+                        <span className="text-yellow-400 font-bold text-sm">{Math.round(p1HP)}%</span>
+                    </div>
+                    <div className="relative h-9 bg-zinc-900 border-2 border-zinc-700 -skew-x-12 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                         <div 
-                            className="h-full bg-gradient-to-r from-yellow-400 to-red-600 transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                            style={{ width: `${calculateHP(p1Health?.currentHealth, p1Health?.maxHealth)}%`, float: 'right' }}
-                        />
+                            className={`h-full transition-all duration-500 ease-out bg-gradient-to-l from-red-600 via-orange-500 to-yellow-400 ${p1HP < 30 ? 'animate-pulse' : ''}`}
+                            style={{ width: `${p1HP}%`, float: 'right' }}
+                        >
+                            <div className="w-full h-1/2 bg-white/10" /> {/* Brillo superior */}
+                        </div>
                     </div>
                 </div>
 
-                {/* Reloj o VS */}
-                <div className="flex-shrink-0 bg-red-600 text-white font-black text-2xl px-4 py-2 border-4 border-white skew-x-[-15deg]">
-                    VS
+                {/* Central VS Element */}
+                <div className="flex flex-col items-center z-10 -mt-2">
+                    <div className="bg-red-600 border-4 border-zinc-900 text-white font-black text-3xl px-6 py-2 shadow-[0_0_15px_rgba(220,38,38,0.6)] -rotate-6 scale-110">
+                        VS
+                    </div>
                 </div>
 
-                {/* Player 2 HUD */}
-                <div className="flex-1 flex flex-col items-start">
-                    <span className="text-white font-black italic text-xl mb-1 drop-shadow-md uppercase">
-                        {gameState.player2.characterName || 'Jugador 2'}
-                    </span>
-                    <div className="w-full h-8 bg-gray-900 border-2 border-white skew-x-[-15deg] overflow-hidden">
+                {/* Player 2 */}
+                <div className="flex-1">
+                    <div className="flex justify-between items-end mb-1 px-2">
+                        <span className="text-yellow-400 font-bold text-sm">{Math.round(p2HP)}%</span>
+                        <span className="text-white font-black text-2xl tracking-tighter drop-shadow-[0_2px_2px_rgba(0,0,0,1)] uppercase text-right">
+                            {gameState.player2.characterName || 'P2'}
+                        </span>
+                    </div>
+                    <div className="relative h-9 bg-zinc-900 border-2 border-zinc-700 -skew-x-12 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                         <div 
-                            className="h-full bg-gradient-to-r from-red-600 to-yellow-400 transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                            style={{ width: `${calculateHP(p2Health?.currentHealth, p2Health?.maxHealth)}%` }}
-                        />
+                            className={`h-full transition-all duration-500 ease-out bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 ${p2HP < 30 ? 'animate-pulse' : ''}`}
+                            style={{ width: `${p2HP}%` }}
+                        >
+                            <div className="w-full h-1/2 bg-white/10" />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Panel de Control Central Superior (Botón Start) */}
+            {/* --- CENTER ACTIONS (START) --- */}
             {!gameState.active && (
-                <div className="mt-10 pointer-events-auto">
+                <div className="flex-1 flex items-center justify-center pointer-events-auto">
                     <button 
                         onClick={onStart}
-                        className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-3 rounded italic uppercase border-b-4 border-green-800 transition-transform active:scale-95"
+                        className="group relative px-12 py-4 bg-white text-black font-black text-2xl italic uppercase transition-all hover:scale-110 active:scale-95"
                     >
-                        START FIGHT
+                        <div className="absolute inset-0 bg-green-500 translate-x-2 translate-y-2 -z-10 group-hover:translate-x-1 group-hover:translate-y-1 transition-transform" />
+                        START BATTLE
                     </button>
                 </div>
             )}
 
-            {/* Botón PEDIR AYUDA - Solo para el jugador con poca vida */}
-            {helpButtonState.showAskHelp && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto animate-bounce">
+            {/* --- BOTTOM ACTIONS (HELP SYSTEM) --- */}
+            <div className="mt-auto mb-10 pointer-events-auto">
+                {helpButtonState.showAskHelp && (
                     <button 
                         onClick={onHelp}
-                        className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-8 py-4 rounded-lg uppercase border-b-4 border-yellow-700 transition-transform active:scale-95 text-lg shadow-lg shadow-yellow-500/30"
+                        className="bg-yellow-400 hover:bg-yellow-300 text-black font-black px-10 py-5 rounded-none -skew-x-12 border-r-8 border-b-8 border-yellow-700 active:translate-y-1 active:border-b-0 transition-all text-xl shadow-2xl shadow-yellow-500/40 animate-bounce"
                     >
-                        PEDIR AYUDA
+                        ¡PEDIR REFUERZOS!
                     </button>
-                </div>
-            )}
+                )}
 
-            {/* Botón RELEVAR - Para espectadores y oponente cuando isVisible es true */}
-            {helpButtonState.showClaim && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto animate-pulse">
+                {helpButtonState.showClaim && (
                     <button 
                         onClick={onClaim}
-                        className="bg-purple-600 hover:bg-purple-500 text-white font-black px-8 py-4 rounded-lg uppercase border-b-4 border-purple-900 transition-transform active:scale-95 text-lg shadow-lg shadow-purple-500/30"
+                        className="bg-purple-600 hover:bg-purple-500 text-white font-black px-10 py-5 rounded-none -skew-x-12 border-r-8 border-b-8 border-purple-900 active:translate-y-1 active:border-b-0 transition-all text-xl shadow-2xl shadow-purple-500/40 animate-pulse"
                     >
-                        RELEVAR
+                        ENTRAR AL RELEVO
                     </button>
-                </div>
-            )}
+                )}
 
-            {/* Botón RETOMAR CONTROL - Para el jugador original después de 10 segundos */}
-            {helpButtonState.showTakeBack && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto animate-bounce">
+                {helpButtonState.showTakeBack && (
                     <button 
                         onClick={onTakeBack}
-                        className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-4 rounded-lg uppercase border-b-4 border-green-800 transition-transform active:scale-95 text-lg shadow-lg shadow-green-500/30"
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-black px-10 py-5 rounded-none -skew-x-12 border-r-8 border-b-8 border-blue-900 active:translate-y-1 active:border-b-0 transition-all text-xl shadow-2xl shadow-blue-500/40"
                     >
-                        RETOMAR CONTROL
+                        RETOMAR LUCHA
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

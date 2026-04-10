@@ -1,17 +1,7 @@
 import axios from 'axios';
 import type { Room } from '../Types/RoomTypes';
-import type { Character, UserCharacter } from '../Types/characterTypes';
+import type { Character, UserCharacter, CharacterAssets } from '../Types/characterTypes';
 import { error } from 'three';
-
-export type CharacterAssets = {
-  characterId?: string;
-  assets?: string[];
-  idle_url?: string;
-  run_url?: string;
-  attack_url?: string;
-  hurt_url?: string;
-  [key: string]: any;
-};
 
 const lobbyApiAxios = axios.create({
     baseURL:  import.meta.env.VITE_API_LOBBY_URL,

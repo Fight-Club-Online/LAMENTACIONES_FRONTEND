@@ -11,20 +11,12 @@ interface UseCreateFightReturn {
     startExistingFight: (fightId: string) => Promise<Fight | null>;
 }
 
-/**
- * Hook para crear e iniciar peleas.
- * Se usa desde la pantalla de selección de personajes.
- * Al llamar createAndStartFight, se crea la pelea en el backend y navega a FightPage.
- */
 export const useCreateFight = (): UseCreateFightReturn => {
     const [fight, setFight] = useState<Fight | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    /**
-     * Crea una nueva pelea y navega a la página de combate
-     */
     const createAndStartFight = useCallback(async (
         roomCode: string, 
         player1Id: string, 

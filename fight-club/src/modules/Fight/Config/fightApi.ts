@@ -45,35 +45,4 @@ export const fightApi = {
         });
         return res.data;
     },
-
-    /**
-     * Envía una acción del jugador (respaldo HTTP si WebSocket falla)
-     */
-    sendInput: async (fightId: string, input: PlayerInputDto): Promise<void> => {
-        await fightApiAxios.post(`/fight/${fightId}/input`, input).catch((error) => {
-            throw new Error(error.response?.data?.message || 'Error al enviar input');
-        });
-    },
-
-    /**
-     * Pide ayuda durante la pelea (activa el HelpButton)
-     */
-    askForHelp: async (fightId: string, userId: string): Promise<void> => {
-        await fightApiAxios.post(`/fight/${fightId}/help`, null, {
-            params: { userId }
-        }).catch((error) => {
-            throw new Error(error.response?.data?.message || 'Error al pedir ayuda');
-        });
-    },
-
-    /**
-     * Reclama el botón de ayuda
-     */
-    claimHelp: async (fightId: string, userId: string): Promise<void> => {
-        await fightApiAxios.post(`/fight/${fightId}/claim`, null, {
-            params: { userId }
-        }).catch((error) => {
-            throw new Error(error.response?.data?.message || 'Error al reclamar ayuda');
-        });
-    },
 };

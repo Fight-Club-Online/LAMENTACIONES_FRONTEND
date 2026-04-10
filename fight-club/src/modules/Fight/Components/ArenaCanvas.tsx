@@ -2,59 +2,44 @@ import React, { useRef, useEffect } from 'react';
 import type { Fight, Fighter, FighterAction } from '../types/fight';
 import backgroundImage from '../../../assets/Background.jpeg';
 
-interface Props {
-    gameState: Fight | null;
-}
+interface Props { gameState: Fight | null; }
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const FIGHTER_WIDTH = 60;
 const FIGHTER_HEIGHT = 120;
-const GROUND_Y = CANVAS_HEIGHT - 40; // Suelo más abajo
-const LERP_SPEED = 0.25;
-const FIGHTER_GROUND_Y = GROUND_Y - FIGHTER_HEIGHT; // Posición Y de los fighters en el suelo
 
-const ACTION_COLORS: Record<FighterAction, string> = {
-    IDLE: '#3b82f6',
-    MOVE_LEFT: '#06b6d4',
-    MOVE_RIGHT: '#06b6d4',
-    JUMP: '#8b5cf6',
-    BLOCK: '#f59e0b',
-    BASIC_ATTACK: '#ef4444',
-    SPECIAL_ATTACK: '#ec4899',
-    HURT: '#dc2626',
-    DEAD: '#4b5563',
+const GROUND_Y = CANVAS_HEIGHT - 20; 
+const LERP_SPEED = 0.60;
+
+const ACTION_THEMES: Record<FighterAction, { color: string; glow: string }> = {
+    IDLE: { color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+    MOVE_LEFT: { color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.3)' },
+    MOVE_RIGHT: { color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.3)' },
+    JUMP: { color: '#a855f7', glow: 'rgba(168, 85, 247, 0.6)' },
+    BLOCK: { color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.8)' },
+    BASIC_ATTACK: { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.8)' },
+    SPECIAL_ATTACK: { color: '#ec4899', glow: 'rgba(236, 72, 153, 0.9)' },
+    HURT: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.8)' },
+    DEAD: { color: '#27272a', glow: 'rgba(0, 0, 0, 0)' },
 };
-
-interface VisualPositions {
-    player1: { x: number; y: number };
-    player2: { x: number; y: number };
-    initialized: boolean;
-}
 
 const lerp = (current: number, target: number, speed: number) =>
     current + (target - current) * speed;
 
-const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
+export const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameRef = useRef<number>(0);
     const backgroundRef = useRef<HTMLImageElement | null>(null);
-
-    // El ref que el loop siempre lee — nunca queda stale
     const gameStateRef = useRef<Fight | null>(null);
-
-    const visualPositionsRef = useRef<VisualPositions>({
-        player1: { x: 80, y: FIGHTER_GROUND_Y },  // Lado izquierdo
-        player2: { x: CANVAS_WIDTH - FIGHTER_WIDTH - 80, y: FIGHTER_GROUND_Y }, // Lado derecho
+    const visualPositionsRef = useRef({
+        player1: { x: 80, y: GROUND_Y - FIGHTER_HEIGHT },
+        player2: { x: CANVAS_WIDTH - 140, y: GROUND_Y - FIGHTER_HEIGHT },
         initialized: false,
     });
 
-    // Sincronizar el ref cuando cambia la prop — sin recrear el loop
-    useEffect(() => {
-        gameStateRef.current = gameState;
-    }, [gameState]);
+    useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
 
-    // El loop de animación se crea UNA sola vez
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -63,91 +48,51 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
 
         if (!backgroundRef.current) {
             const img = new Image();
-            img.crossOrigin = 'anonymous';
             img.src = backgroundImage;
             backgroundRef.current = img;
         }
 
-        const drawFighter = (
-            ctx: CanvasRenderingContext2D,
-            fighter: Fighter,
-            visualPos: { x: number; y: number },
-            isPlayer1: boolean
-        ) => {
-            const { x, y } = visualPos;
-            const baseColor = isPlayer1 ? '#3b82f6' : '#ef4444';
-            const actionColor = ACTION_COLORS[fighter.currentAction] ?? baseColor;
+        const drawFighter = (ctx: CanvasRenderingContext2D, fighter: Fighter, pos: { x: number; y: number }, isP1: boolean) => {
+            const theme = ACTION_THEMES[fighter.currentAction] || ACTION_THEMES.IDLE;
+            const { x, y } = pos;
 
-            // Sombra
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            // SOMBRA
+            const distanceFromGround = Math.max(0, (GROUND_Y - FIGHTER_HEIGHT) - y);
+            const shadowScale = Math.max(0.2, 1 - distanceFromGround / 150);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.beginPath();
-            ctx.ellipse(x + FIGHTER_WIDTH / 2, GROUND_Y + 5, FIGHTER_WIDTH / 2, 10, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + FIGHTER_WIDTH / 2, GROUND_Y, (FIGHTER_WIDTH / 2) * shadowScale, 5 * shadowScale, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Cuerpo
-            ctx.fillStyle = actionColor;
+            // CUERPO CON ESTIRAMIENTO (Si cae rápido, se estira)
+            const gradient = ctx.createLinearGradient(x, y, x + FIGHTER_WIDTH, y);
+            gradient.addColorStop(0, isP1 ? '#1e40af' : '#991b1b');
+            gradient.addColorStop(0.5, theme.color);
+            gradient.addColorStop(1, isP1 ? '#1e40af' : '#991b1b');
+
+            if (fighter.currentAction !== 'IDLE') {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = theme.glow;
+            }
+
+            ctx.fillStyle = gradient;
             ctx.fillRect(x, y, FIGHTER_WIDTH, FIGHTER_HEIGHT);
+            ctx.shadowBlur = 0;
 
-            // Borde
-            ctx.strokeStyle = isPlayer1 ? '#1d4ed8' : '#b91c1c';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x, y, FIGHTER_WIDTH, FIGHTER_HEIGHT);
+            // Ojo/Visor
+            ctx.fillStyle = fighter.currentAction === 'HURT' ? '#ffffff' : '#000000';
+            const eyeX = fighter.direction === 'RIGHT' ? x + FIGHTER_WIDTH - 15 : x + 5;
+            ctx.fillRect(eyeX, y + 20, 10, 5);
 
-            // Indicador de dirección
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            if (fighter.direction === 'RIGHT') {
-                ctx.moveTo(x + FIGHTER_WIDTH - 10, y + FIGHTER_HEIGHT / 2);
-                ctx.lineTo(x + FIGHTER_WIDTH - 20, y + FIGHTER_HEIGHT / 2 - 10);
-                ctx.lineTo(x + FIGHTER_WIDTH - 20, y + FIGHTER_HEIGHT / 2 + 10);
-            } else {
-                ctx.moveTo(x + 10, y + FIGHTER_HEIGHT / 2);
-                ctx.lineTo(x + 20, y + FIGHTER_HEIGHT / 2 - 10);
-                ctx.lineTo(x + 20, y + FIGHTER_HEIGHT / 2 + 10);
-            }
-            ctx.fill();
-
-            // Bloqueo
-            if (fighter.isBlocking) {
-                ctx.strokeStyle = '#f59e0b';
-                ctx.lineWidth = 4;
+            // Ataques
+            if (fighter.currentAction.includes('ATTACK')) {
+                const isSpecial = fighter.currentAction === 'SPECIAL_ATTACK';
+                ctx.fillStyle = isSpecial ? 'rgba(236, 72, 153, 0.6)' : 'rgba(255, 255, 255, 0.4)';
+                const attackAreaX = fighter.direction === 'RIGHT' ? x + FIGHTER_WIDTH : x - 40;
                 ctx.beginPath();
-                ctx.arc(x + FIGHTER_WIDTH / 2, y + FIGHTER_HEIGHT / 2, 40, 0, Math.PI * 2);
-                ctx.stroke();
+                ctx.arc(attackAreaX + 20, y + 40, isSpecial ? 50 : 30, 0, Math.PI * 2);
+                ctx.fill();
             }
-
-            // Flash de ataque
-            if (fighter.currentAction === 'BASIC_ATTACK' || fighter.currentAction === 'SPECIAL_ATTACK') {
-                ctx.fillStyle = 'rgba(255,255,0,0.3)';
-                const attackX = fighter.direction === 'RIGHT' ? x + FIGHTER_WIDTH : x - 30;
-                ctx.fillRect(attackX, y + 20, 30, 30);
-            }
-
-            // Efecto de daño
-            if (fighter.currentAction === 'HURT') {
-                ctx.fillStyle = 'rgba(255,0,0,0.4)';
-                ctx.fillRect(x - 5, y - 5, FIGHTER_WIDTH + 10, FIGHTER_HEIGHT + 10);
-            }
-
-            // Nombre y acción
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(fighter.characterName ?? (isPlayer1 ? 'P1' : 'P2'), x + FIGHTER_WIDTH / 2, y - 10);
-            ctx.font = '10px Arial';
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillText(fighter.currentAction, x + FIGHTER_WIDTH / 2, y - 25);
-        };
-
-        const drawArena = (ctx: CanvasRenderingContext2D) => {
-            ctx.fillStyle = '#3f3f46';
-            ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
-            ctx.strokeStyle = '#71717a';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, GROUND_Y);
-            ctx.lineTo(CANVAS_WIDTH, GROUND_Y);
-            ctx.stroke();
         };
 
         const render = () => {
@@ -155,28 +100,19 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
 
             if (backgroundRef.current?.complete) {
                 ctx.drawImage(backgroundRef.current, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            } else {
-                ctx.fillStyle = '#1a1a2e';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             }
 
-            drawArena(ctx);
-
-            // Leer siempre el estado más fresco desde el ref
             const state = gameStateRef.current;
-
             if (state) {
                 const vp = visualPositionsRef.current;
-
                 if (!vp.initialized) {
-                    vp.player1.x = state.player1.posX;
-                    vp.player1.y = state.player1.posY;
-                    vp.player2.x = state.player2.posX;
-                    vp.player2.y = state.player2.posY;
+                    vp.player1 = { x: state.player1.posX, y: state.player1.posY };
+                    vp.player2 = { x: state.player2.posX, y: state.player2.posY };
                     vp.initialized = true;
                 }
 
-                // Interpolar hacia la posición del servidor
                 vp.player1.x = lerp(vp.player1.x, state.player1.posX, LERP_SPEED);
                 vp.player1.y = lerp(vp.player1.y, state.player1.posY, LERP_SPEED);
                 vp.player2.x = lerp(vp.player2.x, state.player2.posX, LERP_SPEED);
@@ -184,38 +120,22 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
 
                 drawFighter(ctx, state.player1, vp.player1, true);
                 drawFighter(ctx, state.player2, vp.player2, false);
-
-                if (!state.active) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 36px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('PRESIONA START', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-                }
-            } else {
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 24px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Cargando pelea...', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
             }
 
             animationFrameRef.current = requestAnimationFrame(render);
         };
 
         render();
-
         return () => cancelAnimationFrame(animationFrameRef.current);
-    }, []); // <- sin dependencias: el loop vive toda la vida del componente
+    }, []);
 
     return (
         <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="rounded-lg shadow-2xl border-4 border-zinc-800 max-w-full"
+            className="w-full h-full object-contain drop-shadow-2xl"
         />
     );
 };
-
 export default ArenaCanvas;
