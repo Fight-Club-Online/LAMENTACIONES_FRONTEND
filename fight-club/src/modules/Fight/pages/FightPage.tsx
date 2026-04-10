@@ -2,9 +2,11 @@ import React, { useMemo } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
+import { useFightVoiceChat } from '../Hooks/useFightVoiceChat';
 import { useKeyboardControls } from '../Hooks/useKeyboardControls';
 import ArenaCanvas from '../Components/ArenaCanvas';
 import FightHUD from '../Components/FightHUD';
+import FightCommsPanel from '../Components/FightCommsPanel';
 import { SelectCharacters } from './SelectCharacters';
 import backgroundImage from '../../../assets/Background.jpeg';
 import { FightResultScreen } from '../Components/FightResultScreen';
@@ -15,6 +17,8 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
         gameState, isConnected, isLoading, error, sendAction, 
         selectCharacter, startFight, askForHelp, claimHelp, takeBack 
     } = useFightWebsocket(fightId, userId);
+    const username = getUserData()?.username || userId;
+    const voiceChat = useFightVoiceChat({ fightId, userId, username, gameState });
 
     useKeyboardControls(sendAction, !!gameState?.active);
     
@@ -182,6 +186,23 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                         result={fightResult}
                         gameState={gameState!}
                         userId={userId}
+                    />
+                </>
+            )}
+
+            {voiceChat.isFighter && (
+                <>
+                    <audio ref={voiceChat.remoteAudioRef} autoPlay playsInline />
+                    <FightCommsPanel
+                        connected={voiceChat.connected}
+                        enabled={voiceChat.isVoiceEnabled}
+                        error={voiceChat.error}
+                        remoteMuted={voiceChat.remoteMuted}
+                        onToggleRemoteMute={voiceChat.toggleRemoteMute}
+                        messages={voiceChat.messages}
+                        chatInput={voiceChat.chatInput}
+                        onChatInputChange={voiceChat.setChatInput}
+                        onSendChat={voiceChat.sendChatMessage}
                     />
                 </>
             )}
