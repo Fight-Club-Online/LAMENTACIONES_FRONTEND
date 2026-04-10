@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import type { UserCharacter } from '../../../Types/characterTypes';
-import type { CharacterAssets } from '../../../Config/axiosLobby';
+import type { UserCharacter, CharacterAssets } from '../../../Types/characterTypes';
+import {
+  getCharacterId,
+  getCharacterName,
+  getCharacterHp,
+  getCharacterATK,
+  getCharacterImg,
+} from '../../../Types/characterHelpers';
 import { lobbyApi } from '../../../Config/axiosLobby';
 import { getUserData } from '../../../Types/localUserData';
 
@@ -20,7 +26,7 @@ type props ={
 
 type CharacterWithAssets = UserCharacter & { assets?: CharacterAssets };
 
-export const CharacterContainer: React.FC<props>  = ({userCharacters})=>{
+export const CharacterContainer: React.FC<props>  = ({userCharacters}: props)=>{
     const[characterScreen,setCharacterScreen] = useState<CharacterWithAssets | null>(null);
     const[charactersWithAssets, setCharactersWithAssets] = useState<CharacterWithAssets[]>([]);
     const[loading, setLoading] = useState(true);
@@ -59,11 +65,10 @@ export const CharacterContainer: React.FC<props>  = ({userCharacters})=>{
 
                 console.log('CharacterContainer - Obteniendo assets...');
                 const charactersData: CharacterWithAssets[] = await Promise.all(
-                    characters.map(async (char) => {
+                    characters.map(async (char: UserCharacter) => {
                         try {
-                            // Normalizar estructura: el API retorna datos planos
-                            const characterName = (char as any).characterName || char.character?.characterName;
-                            const characterId = (char as any).characterId || char.character?.characterId;
+                            const characterName = getCharacterName(char);
+                            const characterId = getCharacterId(char);
                             
                             console.log(`Obteniendo assets para: ${characterName}`);
                             const assets = await lobbyApi.getUserCharacterAssets(userId, characterId.toString());
@@ -130,23 +135,25 @@ export const CharacterContainer: React.FC<props>  = ({userCharacters})=>{
                 </div>
                 <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-10">
                     <div
-                        key={`${(characterScreen as any).characterId}`}
+                        key={`${getCharacterId(characterScreen)}`}
                         className="sprite sprite-idle"
                         style={{
-                            backgroundImage: `url(${(characterScreen.assets as any)?.idle_url || (characterScreen as any).characterImg || 'https://via.placeholder.com/32x64'})`
+                            backgroundImage: `url(${characterScreen.assets?.idle_url || getCharacterImg(characterScreen) || 'https://via.placeholder.com/32x64'})`
                         }}
                     />
                 </div>
                 <div className="relative z-10 pb-8 pl-8 border-l-4 border-primary-container">
-                    <h2 className="font-headline text-5xl font-black uppercase tracking-tighter text-on-surface leading-none mb-2"> {(characterScreen as any).characterName || characterScreen.character?.characterName}  </h2>
+                    <h2 className="font-headline text-5xl font-black uppercase tracking-tighter text-on-surface leading-none mb-2">
+                        {getCharacterName(characterScreen)}
+                    </h2>
                     <div className="flex gap-4 mt-6">
                         <div className="bg-surface-container-highest/80 backdrop-blur px-4 py-2 border-r-2 border-secondary">
                             <p className="text-[10px] text-stone-500 uppercase font-bold">Vida</p>
-                            <p className="font-headline text-lg">{(characterScreen as any).characterHp || characterScreen.character?.characterHp}</p>
+                            <p className="font-headline text-lg">{getCharacterHp(characterScreen)}</p>
                         </div>
                         <div className="bg-surface-container-highest/80 backdrop-blur px-4 py-2 border-r-2 border-secondary">
                             <p className="text-[10px] text-stone-500 uppercase font-bold">Daño</p>
-                            <p className="font-headline text-lg">{(characterScreen as any).characterATK || characterScreen.character?.characterATK}</p>
+                            <p className="font-headline text-lg">{getCharacterATK(characterScreen)}</p>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import type { Fight } from '../types/fight';
 import type { Character, UserCharacter } from '../../Lobby/Types/characterTypes';
+import { 
+  characterToUserCharacter, 
+  getCharacterId,
+  getCharacterName,
+  getCharacterLevel,
+  getCharacterATK,
+  getCharacterDEF,
+  getCharacterImg,
+} from '../../Lobby/Types/characterHelpers';
 import { lobbyApi } from '../../Lobby/Config/axiosLobby';
 import { FooterSelectCharacter } from '../Components/SelectCharacter/footerSC';
 import { HeaderSelectCharacter } from '../Components/SelectCharacter/headerSC';
@@ -13,19 +22,16 @@ interface SelectCharactersProps {
     onStartFight: () => void;
 }
 
- const defaultCharacter: UserCharacter = {
-    id: "uc-001",
-    user: "usuario123",
-    character: {
-      characterId: 1,
-      characterLevel: 10,
-      characterName: "Guerrero Arcano",
-      characterHp: "1500",
-      characterATK: "250",
-      characterDEF: "180",
-      characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
-    },
-  };
+const defaultCharacter: UserCharacter = {
+    userId: "usuario123",
+    characterId: 1,
+    characterLevel: 10,
+    characterName: "Guerrero Arcano",
+    characterHp: "1500",
+    characterATK: "250",
+    characterDEF: "180",
+    characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
+};
 
 
 
@@ -58,28 +64,25 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                 const response = await lobbyApi.getUserCharacters(userId);
                 console.log("el try:",response)
                 if(response.length === 0){
-                    const response = await lobbyApi.getAllCharacters();
-                    var c: Character =  response[0];
-                    let uC : UserCharacter = {
-                        id : "1",
-                        user: userId,
-                        character: c
-                    }
-                    setCharacters([defaultCharacter]);        
-                 }else{
-                    setCharacters([defaultCharacter]);
-                 }
+                    const allCharacters = await lobbyApi.getAllCharacters();
+                    const firstChar: Character = allCharacters[0];
+                    const userChar = characterToUserCharacter(firstChar, userId);
+                    setCharacters([userChar]);        
+                }else{
+                    setCharacters(response);
+                }
             } catch (error) {
                 console.error('Error cargando personajes:', error);
-                const response = await lobbyApi.getAllCharacters();
-                console.log(response)
-                var c: Character =  response[0];
-                let uC : UserCharacter = {
-                    id : "1",
-                    user: userId,
-                    character: c
+                try {
+                    const allCharacters = await lobbyApi.getAllCharacters();
+                    console.log(allCharacters)
+                    const firstChar: Character = allCharacters[0];
+                    const userChar = characterToUserCharacter(firstChar, userId);
+                    setCharacters([userChar]);
+                } catch (fallbackError) {
+                    console.error('Error en fallback:', fallbackError);
+                    setCharacters([defaultCharacter]);
                 }
-                setCharacters([defaultCharacter]);
             } finally {
                 setIsLoadingCharacters(false);
             }
@@ -131,14 +134,14 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {characters.map((char) => (
+                            {characters.map((char: UserCharacter) => (
                                 <button
-                                    key={char.character.characterId}
-                                    onClick={() => handleSelectCharacter(char.character.characterId)}
+                                    key={getCharacterId(char)}
+                                    onClick={() => handleSelectCharacter(Number(getCharacterId(char)))}
                                     disabled={currentPlayerReady}
                                     className={`
                                         relative p-4 rounded-lg border-2 transition-all
-                                        ${selectedCharacterId === char.character.characterId
+                                        ${selectedCharacterId === getCharacterId(char)
                                             ? 'border-red-500 bg-red-500/20 scale-105'
                                             : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
                                         }
@@ -147,10 +150,10 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                 >
                                     {/* Imagen del personaje */}
                                     <div className="aspect-square bg-zinc-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                                        {char.character.characterImg ? (
+                                        {getCharacterImg(char) ? (
                                             <img 
-                                                src={char.character.characterImg} 
-                                                alt={char.character.characterName}
+                                                src={getCharacterImg(char)} 
+                                                alt={getCharacterName(char)}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -159,17 +162,17 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                     </div>
 
                                     {/* Info del personaje */}
-                                    <h3 className="font-bold text-white text-sm truncate">{char.character.characterName}</h3>
-                                    <p className="text-xs text-zinc-400">Nivel {char.character.characterLevel}</p>
+                                    <h3 className="font-bold text-white text-sm truncate">{getCharacterName(char)}</h3>
+                                    <p className="text-xs text-zinc-400">Nivel {getCharacterLevel(char)}</p>
 
                                     {/* Stats */}
                                     <div className="mt-2 flex gap-2 text-xs">
-                                        <span className="text-red-400">ATK:{char.character.characterATK}</span>
-                                        <span className="text-blue-400">DEF:{char.character.characterDEF}</span>
+                                        <span className="text-red-400">ATK:{getCharacterATK(char)}</span>
+                                        <span className="text-blue-400">DEF:{getCharacterDEF(char)}</span>
                                     </div>
 
                                     {/* Indicador de seleccionado */}
-                                    {selectedCharacterId === char.character.characterId && (
+                                    {selectedCharacterId === getCharacterId(char) && (
                                         <div className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
