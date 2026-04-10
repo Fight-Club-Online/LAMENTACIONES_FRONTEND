@@ -1,19 +1,26 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import * as StompPkg from '@stomp/stompjs';
+import { io, Socket } from 'socket.io-client';
 
 import { fightApi } from '../Config/fightApi';
 import type { 
     Fight, 
     HelpButton, 
-    FighterAction, 
-    PlayerInputDto 
+    FighterAction 
 } from '../types/fight';
 
+// Variables de Entorno
 const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
     'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
 
-const WS_ENDPOINT = API_URL.includes('localhost') ? `${API_URL}/fightService` : `${API_URL.replace('http://', 'https://')}/fightService`;
+const VOICE_CHAT_URL = import.meta.env.VITE_API_VOICE_CHAT_URL || 
+    'https://lamentaciones-voice-chat-a7czbaa5h3drb6gv.canadacentral-01.azurewebsites.net';
+
+// Configuración de Endpoints
+const WS_ENDPOINT = API_URL.includes('localhost') 
+    ? `${API_URL}/fightService` 
+    : `${API_URL.replace('http://', 'https://')}/fightService`;
 
 const FIGHT_INITIAL_FETCH_DELAY_MS = (() => {
     const raw = import.meta.env.VITE_FIGHT_INITIAL_FETCH_DELAY_MS;
@@ -29,6 +36,11 @@ export interface FightWebsocketState {
     isConnected: boolean;
     isLoading: boolean;
     error: string | null;
+    // Voice Chat State
+    isVoiceConnected: boolean;
+    isMuted: boolean;
+    toggleMute: () => void;
+    // Actions
     sendAction: (action: FighterAction) => void;
     selectCharacter: (characterId: number) => void;
     startFight: () => Promise<void>;
@@ -43,10 +55,16 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     
+    // Estados del Voice Chat
+    const [isVoiceConnected, setIsVoiceConnected] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
+    
     const stompClient = useRef<any>(null);
+    const voiceSocketRef = useRef<Socket | null>(null);
     const lastActionRef = useRef<{ action: FighterAction; time: number } | null>(null);
     const ACTION_THROTTLE_MS = 50;
 
+    // 1. Carga inicial del estado de la pelea
     useEffect(() => {
         let cancelled = false;
         const loadInitialState = async () => {
@@ -70,6 +88,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
         return () => { cancelled = true; };
     }, [fightId]);
 
+    // 2. Conexión WebSocket Principal (STOMP) para el combate
     useEffect(() => {
         if (!fightId) return;
         const StompClient = (StompPkg as any).Client || (StompPkg as any).default?.Client;
@@ -87,13 +106,14 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
             onConnect: () => {
-                console.log('🥊 Conectado al ring de Azure');
+                console.log('🥊 Conectado al sistema de combate');
                 setIsConnected(true);
                 setError(null);
         
                 client.subscribe(`/topic/fight.${fightId}`, (message: any) => {
                     try {
                         const payload = JSON.parse(message.body);
+                        // Discriminación de mensajes según tus interfaces
                         if ("player1" in payload && "player2" in payload) {
                             setGameState(payload as Fight);
                         } 
@@ -118,6 +138,52 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
             if (stompClient.current) stompClient.current.deactivate();
         };
     }, [fightId]);
+
+    // 3. Lógica de Voice Chat (Socket.io a Azure)
+    useEffect(() => {
+        // CORRECCIÓN: Usamos 'active' según tu interfaz Fight
+        if (gameState?.active && !voiceSocketRef.current) {
+            console.log('🎙️ Activando Voice Chat en Azure...');
+            
+            const socket = io(VOICE_CHAT_URL, {
+                transports: ['websocket'],
+                query: { fightId, userId }
+            });
+
+            socket.on('connect', () => {
+                setIsVoiceConnected(true);
+                console.log('🎤 Voice Chat: Conexión establecida');
+                socket.emit('join-voice-room', { fightId, userId });
+            });
+
+            socket.on('disconnect', () => {
+                setIsVoiceConnected(false);
+            });
+
+            socket.on('moderator-mute', (data: { reason: string }) => {
+                console.warn('🔇 Silenciado:', data.reason);
+                setIsMuted(true);
+            });
+
+            voiceSocketRef.current = socket;
+        }
+
+        return () => {
+            if (voiceSocketRef.current) {
+                voiceSocketRef.current.disconnect();
+                voiceSocketRef.current = null;
+            }
+        };
+    }, [gameState?.active, fightId, userId]);
+
+    // --- Handlers y Callbacks ---
+
+    const toggleMute = useCallback(() => {
+        if (!voiceSocketRef.current) return;
+        const newMuteState = !isMuted;
+        setIsMuted(newMuteState);
+        voiceSocketRef.current.emit('toggle-mute', { muted: newMuteState });
+    }, [isMuted]);
 
     const sendAction = useCallback((action: FighterAction) => {
         if (!stompClient.current?.connected) return;
@@ -186,6 +252,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
 
     return { 
         gameState, isConnected, isLoading, error,
+        isVoiceConnected, isMuted, toggleMute,
         sendAction, selectCharacter, startFight, 
         askForHelp, claimHelp, takeBack
     };
