@@ -17,10 +17,15 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
     } = useFightWebsocket(fightId, userId);
 
     useKeyboardControls(sendAction, !!gameState?.active);
-
+    
     const fightPhase = useMemo(() => {
         if (!gameState || !gameState.player1 || !gameState.player2) return 'loading';
         const bothReady = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
+        if (!gameState.active && bothReady) {
+            const p1Dead = (gameState.player1.health?.currentHealth ?? 1) <= 0;
+            const p2Dead = (gameState.player2.health?.currentHealth ?? 1) <= 0;
+            if (p1Dead || p2Dead) return 'finished';
+        }
         if (!gameState.active && !bothReady) return 'character-selection';
         if (!gameState.active && bothReady) return 'ready-to-start';
         return 'fighting';
@@ -59,6 +64,14 @@ const FightPageInner: React.FC<{ fightId: string; userId: string }> = ({ fightId
                 Volver al Lobby
             </button>
         </div>
+    );
+
+    if (fightPhase === 'finished' && fightResult) return (
+        <FightResultScreen
+        result={fightResult}
+        gameState={gameState!}
+        userId={userId}
+        />
     );
 
     // Selección de personajes
