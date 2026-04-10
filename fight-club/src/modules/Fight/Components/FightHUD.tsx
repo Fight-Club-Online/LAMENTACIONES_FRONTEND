@@ -24,23 +24,23 @@ const FightHUD: React.FC<Props> = ({ gameState, userId, onStart, onHelp, onClaim
     const helpButtonState = useMemo(() => {
         const helpButton = gameState.helpButton;
         
-        // DEBUG: Log del estado del helpButton
-        console.log('[v0] HelpButton state:', {
-            helpButton,
-            userId,
-            status: helpButton?.status,
-            visible: helpButton?.visible,
-            activatedForUserId: helpButton?.activatedForUserId,
-            claimedByUserId: helpButton?.claimedByUserId
-        });
-        
         if (!helpButton) return { showAskHelp: false, showClaim: false, showTakeBack: false };
 
         const canAskForHelp = helpButton.activatedForUserId === userId && helpButton.status === 'ACTIVE' && !helpButton.visible;
         const showClaimButton = helpButton.visible && helpButton.status === 'ACTIVE' && helpButton.activatedForUserId !== userId;
         const showTakeBack = helpButton.status === 'CLAIMED' && helpButton.activatedForUserId === userId;
 
-        console.log('[v0] HelpButton calculated state:', { canAskForHelp, showClaimButton, showTakeBack });
+        // DEBUG: Solo logear cuando hay cambios importantes
+        if (helpButton.visible || helpButton.status !== 'INACTIVE') {
+            console.log('[v0] HelpButton DEBUG:', {
+                myUserId: userId,
+                activatedFor: helpButton.activatedForUserId,
+                visible: helpButton.visible,
+                status: helpButton.status,
+                amITheOneWhoAsked: helpButton.activatedForUserId === userId,
+                showClaimButton
+            });
+        }
 
         return { showAskHelp: canAskForHelp, showClaim: showClaimButton, showTakeBack: showTakeBack };
     }, [gameState.helpButton, userId]);
