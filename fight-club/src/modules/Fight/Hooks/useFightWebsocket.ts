@@ -95,9 +95,23 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
                     try {
                         const payload = JSON.parse(message.body);
                         if ("player1" in payload && "player2" in payload) {
-                            setGameState(payload as Fight);
+                            // Es una actualización del Fight completo (game loop)
+                            // Preservar el helpButton actual si el payload no trae uno válido
+                            setGameState(prev => {
+                                const newFight = payload as Fight;
+                                // Si el payload trae helpButton con visible=true o status activo, usarlo
+                                // Si no, preservar el helpButton previo
+                                const shouldUseNewHelpButton = newFight.helpButton && 
+                                    (newFight.helpButton.visible || newFight.helpButton.status !== 'INACTIVE');
+                                
+                                return {
+                                    ...newFight,
+                                    helpButton: shouldUseNewHelpButton ? newFight.helpButton : (prev?.helpButton || newFight.helpButton)
+                                };
+                            });
                         } 
                         else if ("buttonId" in payload || ("status" in payload && !("player1" in payload))) {
+                            // Es una actualización específica del HelpButton
                             setGameState(prev => prev ? { ...prev, helpButton: payload as HelpButton } : null);
                         }
                     } catch (e) {
@@ -146,20 +160,32 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     }, [fightId, userId]);
 
     const askForHelp = useCallback(() => {
+        console.log('[v0] askForHelp called - connected:', stompClient.current?.connected, 'fightId:', fightId, 'userId:', userId);
         if (stompClient.current?.connected) {
+            const destination = `/fightService/fight/${fightId}/help`;
+            console.log('[v0] Publishing to:', destination, 'body:', userId);
             stompClient.current.publish({
-                destination: `/fightService/fight/${fightId}/help`,
+                destination,
                 body: userId 
             });
+            console.log('[v0] askForHelp message sent');
+        } else {
+            console.log('[v0] askForHelp - NOT connected!');
         }
     }, [fightId, userId]);
 
     const claimHelp = useCallback(() => {
+        console.log('[v0] claimHelp called - connected:', stompClient.current?.connected, 'fightId:', fightId, 'userId:', userId);
         if (stompClient.current?.connected) {
+            const destination = `/fightService/fight/${fightId}/claim`;
+            console.log('[v0] Publishing to:', destination, 'body:', userId);
             stompClient.current.publish({
-                destination: `/fightService/fight/${fightId}/claim`,
+                destination,
                 body: userId
             });
+            console.log('[v0] claimHelp message sent');
+        } else {
+            console.log('[v0] claimHelp - NOT connected!');
         }
     }, [fightId, userId]);
 
