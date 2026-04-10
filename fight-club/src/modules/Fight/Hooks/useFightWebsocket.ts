@@ -146,20 +146,32 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     }, [fightId, userId]);
 
     const askForHelp = useCallback(() => {
+        console.log('[v0] askForHelp called - connected:', stompClient.current?.connected, 'fightId:', fightId, 'userId:', userId);
         if (stompClient.current?.connected) {
+            const destination = `/fightService/fight/${fightId}/help`;
+            console.log('[v0] Publishing to:', destination, 'body:', userId);
             stompClient.current.publish({
-                destination: `/fightService/fight/${fightId}/help`,
+                destination,
                 body: userId 
             });
+            console.log('[v0] askForHelp message sent');
+        } else {
+            console.log('[v0] askForHelp - NOT connected!');
         }
     }, [fightId, userId]);
 
     const claimHelp = useCallback(() => {
+        console.log('[v0] claimHelp called - connected:', stompClient.current?.connected, 'fightId:', fightId, 'userId:', userId);
         if (stompClient.current?.connected) {
+            const destination = `/fightService/fight/${fightId}/claim`;
+            console.log('[v0] Publishing to:', destination, 'body:', userId);
             stompClient.current.publish({
-                destination: `/fightService/fight/${fightId}/claim`,
+                destination,
                 body: userId
             });
+            console.log('[v0] claimHelp message sent');
+        } else {
+            console.log('[v0] claimHelp - NOT connected!');
         }
     }, [fightId, userId]);
 
