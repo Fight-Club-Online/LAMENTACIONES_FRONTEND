@@ -1,7 +1,7 @@
 // Componentes
-export { default as ArenaCanvas } from './Components/ArenaCanvas';
-export { default as FightHUD } from './Components/FightHUD';
-export { default as StartFightButton } from './Components/StartFightButton';
+export { default as ArenaCanvas } from './Components/EnviromentFight/ArenaCanvas';
+export { default as FightHUD } from './Components/EnviromentFight/FightHUD';
+export { default as StartFightButton } from './Components/SelectCharacter/StartFightButton';
 
 // Páginas
 export { FightPage } from './pages/FightPage';

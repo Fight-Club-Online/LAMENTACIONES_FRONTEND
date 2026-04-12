@@ -56,18 +56,18 @@ export const GuestForm = () => {
         </div>
       </div>
 
-      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-        <p className="text-yellow-500/80 text-[10px] uppercase tracking-widest font-bold">
+      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex justify-center">
+        <p className="text-yellow-500/80 text-[10px] uppercase tracking-widest font-bold text-center">
           ⚠️ Cuenta temporal — expira en 1 hora
         </p>
       </div>
 
-      <ErrorToast message={error} onDismiss={() => setError(null)} /> {/* ← reemplaza div de error */}
+      <ErrorToast message={error} onDismiss={() => setError(null)} />
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-4 bg-gradient-to-r from-[#555] to-[#333] text-white font-bold uppercase tracking-[0.2em] rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
+        className="w-full py-4 bg-gradient-to-r from-[#555] to-[#333] text-white font-bold uppercase tracking-[0.2em] rounded-xl hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isLoading ? 'PREPARANDO...' : 'ENTRAR COMO INVITADO'}
       </button>

@@ -15,13 +15,17 @@ import { FightPage } from "./modules/Fight/pages/FightPage.tsx";
 function App() {
   return (
     <BrowserRouter>
-      <div className="antialiased">
+      <div className="antialiased min-h-screen w-full overflow-x-hidden bg-zinc-950 text-white">
         <Routes>
+          {/* Redirección inicial */}
           <Route path="/" element={<Navigate to="/login" replace />} />
+          
+          {/* Rutas Públicas */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/guest" element={<GuestPage />} />
           
+          {/* Perfil de Usuario */}
           <Route path="/:username/perfil" element={
             <PrivateRoute>
               <PlayerDashboard />
@@ -30,6 +34,7 @@ function App() {
           
           <Route path="/profile" element={<Navigate to="/login" replace />} />
           
+          {/* Lobby y Salas de espera */}
           <Route path="/lobby" element={
             <PrivateRoute>
               <LobbyPage />
@@ -42,14 +47,22 @@ function App() {
             </PrivateRoute>
           } />
 
-          {/* 2. Añade la ruta dinámica para la arena de combate */}
+          {/* Arena de combate dinámica */}
           <Route path="/fight/:fightId" element={
             <PrivateRoute>
               <FightPage />
             </PrivateRoute>
           } />
 
-          <Route path="*" element={<div className="text-white p-10">404 - Not Found</div>} />
+          {/* 404 - Manejo de rutas no encontradas */}
+          <Route path="*" element={
+            <div className="h-screen flex items-center justify-center">
+              <div className="text-center">
+                <h1 className="text-6xl font-black text-red-600 mb-4">404</h1>
+                <p className="text-zinc-400 uppercase tracking-widest">Página no encontrada</p>
+              </div>
+            </div>
+          } />
         </Routes>
       </div>
     </BrowserRouter>

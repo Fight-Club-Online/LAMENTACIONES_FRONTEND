@@ -22,7 +22,7 @@ export const LoginPage: React.FC = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-[92%] max-w-[820px] min-h-[780px] py-16 px-8 sm:px-12 bg-[#12100e]/40 border border-white/10 rounded-[3.5rem] backdrop-blur-2xl shadow-[0_0_120px_rgba(0,0,0,0.9)] flex flex-col justify-center"
+        className="relative z-10 w-[96%] max-w-[760px] min-h-[700px] py-16 px-8 sm:px-12 bg-[#12100e]/40 border border-white/10 rounded-[3.5rem] backdrop-blur-2xl shadow-[0_0_120px_rgba(0,0,0,0.9)] flex flex-col justify-center"
       >
         <AuthHeader />
         
