@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
@@ -7,6 +7,8 @@ import ArenaCanvas from '../Components/EnviromentFight/ArenaCanvas';
 import FightHUD from '../Components/EnviromentFight/FightHUD';
 import { SelectCharacters } from './SelectCharacters';
 import backgroundImage from '../../../assets/Background.jpeg';
+import { FightResultScreen } from '../Components/EnviromentFight/FightResultScreen';
+
 
 type FightPageInnerProps = {
     fightId: string;
@@ -15,6 +17,8 @@ type FightPageInnerProps = {
 
 const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     const navigate = useNavigate();
+    const fightResultRef = useRef<'WIN' | 'LOSE' | 'DRAW' | null>(null)
+
 
     const { 
         gameState, 
@@ -32,25 +36,35 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     useKeyboardControls(sendAction, !!gameState?.active);
 
     const fightPhase = useMemo(() => {
+        if (fightResultRef.current) return 'finished';
         if (!gameState) return 'loading';
         const bothHaveCharacters = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
+        if (!gameState.active && bothHaveCharacters) {
+            const p1Dead = (gameState.player1.health?.currentHealth ?? 1) <= 0;
+            const p2Dead = (gameState.player2.health?.currentHealth ?? 1) <= 0;
+            if (p1Dead || p2Dead) return 'finished';
+        }
         if (!gameState.active && !bothHaveCharacters) return 'character-selection';
         if (!gameState.active && bothHaveCharacters) return 'ready-to-start';
         return 'fighting';
     }, [gameState]);
 
     const fightResult = useMemo(() => {
+        if (fightResultRef.current) return fightResultRef.current
         if (!gameState || gameState.active) return null;
         if (!gameState.player1.health || !gameState.player2.health) return null;
 
         const p1Dead = gameState.player1.health.currentHealth <= 0;
         const p2Dead = gameState.player2.health.currentHealth <= 0;
-
-        if (p1Dead && p2Dead) return 'DRAW';
-        if (p1Dead) return gameState.player2.userId === userId ? 'WIN' : 'LOSE';
-        if (p2Dead) return gameState.player1.userId === userId ? 'WIN' : 'LOSE';
-
-        return null;
+        if (!p1Dead && !p2Dead) return null;
+        
+        let result: 'WIN' | 'LOSE' | 'DRAW';
+        if (p1Dead && p2Dead) result = 'DRAW';
+        else if (p1Dead) result = gameState.player2.userId === userId ? 'WIN' : 'LOSE';
+        else result = gameState.player1.userId === userId ? 'WIN' : 'LOSE';
+        
+        fightResultRef.current = result; 
+        return result;
     }, [gameState, userId]);
 
     if (isLoading && !gameState) {
@@ -100,6 +114,16 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                 onStartFight={startFight}
             />
         );
+    }
+
+    if (fightPhase === 'finished' && fightResult) {
+        return (
+        <FightResultScreen
+         result={fightResult}
+         gameState={gameState!}
+         userId={userId}
+        />
+       );
     }
 
     return (
@@ -193,41 +217,6 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                     </button>
                 </div>
             </div>
-
-            {/* Overlay de Victoria/Derrota: Mejorado con Blur y Tipografía Masiva */}
-            {fightResult && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-xl flex flex-col items-center justify-center z-[100] animate-fadeIn">
-                    <div className="relative group">
-                        <h2 className={`text-9xl font-black italic mb-2 tracking-tighter transition-all ${
-                            fightResult === 'WIN' ? 'text-green-500 drop-shadow-[0_0_30px_#22c55e]' : 
-                            fightResult === 'LOSE' ? 'text-red-600 drop-shadow-[0_0_30px_#dc2626]' : 
-                            'text-yellow-500 drop-shadow-[0_0_30px_#eab308]'
-                        }`}>
-                            {fightResult === 'WIN' ? 'VICTORIA' : 
-                             fightResult === 'LOSE' ? 'DERROTA' : 
-                             'EMPATE'}
-                        </h2>
-                        <div className="absolute -bottom-2 left-0 w-full h-1 bg-current opacity-50" />
-                    </div>
-                    
-                    <p className="text-white font-black text-4xl mt-4 mb-12 tracking-[0.5em] opacity-80">K.O.</p>
-                    
-                    <div className="flex gap-6">
-                        <button 
-                            onClick={() => navigate('/lobby')}
-                            className="bg-white text-black px-12 py-4 font-black italic uppercase hover:bg-zinc-200 transition-all transform hover:-skew-x-12 active:scale-95 cursor-pointer"
-                        >
-                            VOLVER AL LOBBY
-                        </button>
-                        <button 
-                            onClick={() => window.location.reload()}
-                            className="bg-red-600 text-white px-12 py-4 font-black italic uppercase hover:bg-red-500 transition-all transform hover:-skew-x-12 active:scale-95 shadow-lg shadow-red-600/20 cursor-pointer"
-                        >
-                            REVANCHA
-                        </button>
-                    </div>
-                </div>
-            )}
         </main>
     );
 };
