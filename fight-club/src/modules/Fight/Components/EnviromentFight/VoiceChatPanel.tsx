@@ -402,10 +402,28 @@ export const VoiceChatPanel: React.FC<Props> = ({
         if (!chatActiveRef.current || isMuted || isBanned || !isPlayer) return; 
         const stream = await getLocalStream().catch(() => null);
         if (!stream) return;
-        stream.getAudioTracks()[0].enabled = true;
-        console.log('[PTT] Track habilitado:', stream.getAudioTracks()[0].enabled); 
+        const audioTrack = stream.getAudioTracks()[0];
+        audioTrack.enabled = true;
+        console.log('[PTT] Track habilitado:', audioTrack.enabled); 
+
+        peerConnsRef.current.forEach((pc, peerId) => {
+            const yaAgregado = pc.getSenders().find(s => s.track === audioTrack);
+            if (!yaAgregado && pc.connectionState === 'connected') {
+                pc.addTrack(audioTrack, stream);
+                pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .then(() => {
+                    socketRef.current?.emit('rtc-offer', { 
+                        toUserId: peerId, 
+                        offer: pc.localDescription 
+                    });
+                    console.log('[PTT] Renegociando con:', peerId);
+                });
+            }
+        });
+
         setIsTalking(true);
-    }, [isMuted, isBanned, isPlayer, getLocalStream]);
+    }, [isMuted, isBanned, isPlayer, getLocalStream, socketRef]);
 
     const stopTalking = useCallback(() => {
         localStreamRef.current?.getAudioTracks().forEach(t => t.enabled = false);
