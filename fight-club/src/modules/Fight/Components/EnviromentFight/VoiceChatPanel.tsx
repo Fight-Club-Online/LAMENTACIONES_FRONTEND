@@ -440,7 +440,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
         if (e.key === 'Enter') sendMessage();
     };
 
-    // ── Render ────────────────────────────────────────────────────
+    // ── Render 
     return (
         <div className="flex flex-col h-full bg-[#0d0d0f] select-none">
 
@@ -479,7 +479,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                         {chatActive ? 'Sin mensajes aún...' : 'Esperando inicio\nde la partida'}
                     </p>
                 )}
-
+   
                 {messages.map(m => (
                     <div key={m.id} className={`flex flex-col ${m.isSystem ? 'items-center' : m.esMio ? 'items-end' : 'items-start'}`}>
                         {!m.isSystem && (
