@@ -157,9 +157,10 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                     </span>
                 </div>
 
-                {/* HUD + Canvas */}
-                <div className="relative z-20 flex-1 flex flex-col">
-                    <FightHUD
+                {/* HUD — posición absoluta sobre todo el ancho de la arena */}
+                <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
+                    <div className="pointer-events-auto">
+                        <FightHUD
                         gameState={gameState}
                         userId={userId}
                         onStart={startFight}
@@ -167,10 +168,13 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                         onClaim={claimHelp}
                         onTakeBack={takeBack}
                     />
-                    <div className="flex-1 flex items-center justify-center px-4 pb-16">
-                        <ArenaCanvas gameState={gameState} />
                     </div>
                 </div>
+                
+                {/* Canvas — ocupa todo el espacio disponible */}
+                <div className="relative z-20 flex-1 flex items-center justify-center pt-20 pb-8">
+                    <ArenaCanvas gameState={gameState} />
+                    </div>
 
                 {/* Hint controles desktop */}
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden md:flex gap-4 text-white/20 text-[9px] font-black tracking-[0.2em] uppercase z-10">
