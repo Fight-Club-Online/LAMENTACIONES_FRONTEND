@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 
 const VOICE_CHAT_URL = import.meta.env.VITE_API_VOICE_CHAT_URL || 'https://lamentaciones-voice-chat-a7czbaa5h3drb6gv.canadacentral-01.azurewebsites.net';
 
-export const useVoiceChat = (fightId: string | null, userId: string | null, username: string | null) => {
+export const useVoiceChat = (fightId: string | null, userId: string | null, username: string | null, playerType: string = 'PLAYER') => {
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
@@ -21,7 +21,7 @@ export const useVoiceChat = (fightId: string | null, userId: string | null, user
 
         s.on('connect', () => {
             console.log('[Voice] Conectado:', s.id);
-            s.emit('join_fight', { fightId, userId, username: username || userId });
+            s.emit('join_fight', { fightId, userId, username: username || userId, playerType });
         });
 
         s.on('connect_error', (err) => {
@@ -38,7 +38,7 @@ export const useVoiceChat = (fightId: string | null, userId: string | null, user
             s.disconnect();
             socketRef.current = null;
         };
-    }, [fightId, userId, username]);
+    }, [fightId, userId, username, playerType]);
 
     return socketRef;
 };

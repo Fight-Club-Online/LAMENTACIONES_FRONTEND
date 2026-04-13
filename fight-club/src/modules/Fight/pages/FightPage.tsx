@@ -37,7 +37,18 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     } = useFightWebsocket(fightId || '', userId);
 
     const userData = getUserData();
-    const voiceSocketRef = useVoiceChat(fightId || null, userId, userData?.username ?? null);
+
+    const isPlayerInFight = useMemo(() => {
+        if (!gameState) return false;
+        return gameState.player1.userId === userId || gameState.player2.userId === userId;
+    }, [gameState, userId]);
+
+    const voiceSocketRef = useVoiceChat(
+        fightId || null,
+        userId,
+        userData?.username ?? null,
+        isPlayerInFight ? 'PLAYER' : 'SPECTATOR'  
+    );
 
     useKeyboardControls(sendAction, !!gameState?.active);
 
@@ -184,7 +195,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                 </div>
 
                 {/* Mobile Controls */}
-                <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none md:hidden z-30">
+                 {isPlayerInFight && <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none md:hidden z-30">
                     <div className="flex flex-col gap-4 pointer-events-auto">
                         <button
                             onTouchStart={() => sendAction('JUMP')}
@@ -207,7 +218,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                         <button onTouchStart={() => sendAction('SPECIAL_ATTACK')}
                             className="w-20 h-20 bg-purple-600/40 backdrop-blur-md text-white font-black rounded-full border-4 border-purple-500/50 active:scale-75 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)]">K</button>
                     </div>
-                </div>
+                </div>}
             </div>
             
             {/* ── BOTÓN TOGGLE CHAT ── */}
@@ -224,10 +235,11 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
             <div className={`hidden md:flex flex-shrink-0 flex-col border-l border-white/5 bg-black/70 backdrop-blur-md transition-all duration-300 overflow-hidden ${showChat ? 'w-72' : 'w-0'}`}>
             <div className="w-72 h-full flex flex-col">
                 <VoiceChatPanel
+                key={fightId}
                 socketRef={voiceSocketRef}
                 userId={userId}
                 username={userData?.username || userId}
-                isPlayer={true}
+                isPlayer={isPlayerInFight}
                 />
                 </div>
             </div>

@@ -10,6 +10,13 @@ interface Message {
     isSystem?: boolean;
 }
 
+interface ListaSocketItem {
+    socketId: string;
+    userId: string;
+    username: string | null;
+    playerType: 'PLAYER' | 'SPECTATOR';
+}
+
 interface Props {
     socketRef: React.MutableRefObject<Socket | null>;
     userId: string;
@@ -77,6 +84,15 @@ export const VoiceChatPanel: React.FC<Props> = ({
     const remoteAudiosRef   = useRef<Map<string, HTMLAudioElement>>(new Map());
     const chatActiveRef     = useRef(false);
     const pendingPeersRef   = useRef<{ userId: string; isInitiator: boolean }[]>([]);
+    const currentFightIdRef = useRef<string | null>(null);
+    const cleanupAllConnections = useCallback(() => {
+        peerConnsRef.current.forEach(pc => pc.close());
+        peerConnsRef.current.clear();
+        remoteAudiosRef.current.forEach(a => a.remove());
+        remoteAudiosRef.current.clear();
+        setPeers([]);
+        pendingPeersRef.current = [];
+    }, []);
 
     // ── Auto-scroll ──────────────────────────────────────────────
     useEffect(() => {
@@ -149,25 +165,26 @@ export const VoiceChatPanel: React.FC<Props> = ({
             console.log(`[ICE] Estado con ${targetUserId}:`, pc.iceConnectionState);
         };
 
-        // Si soy el iniciador, creo la oferta
-        getLocalStream().then(stream => {
-            stream.getTracks().forEach(t => {
-                if (!pc.getSenders().find(s => s.track === t)) {
-                    pc.addTrack(t, stream);
+        // Solo jugadores agregan audio local; espectadores solo reciben
+        if (isPlayer) {
+            getLocalStream().then(stream => {
+                stream.getTracks().forEach(t => {
+                    if (!pc.getSenders().find(s => s.track === t)) {
+                        pc.addTrack(t, stream);
+                    }
+                });
+                if (isInitiator) {
+                    setTimeout(() => {
+                        pc.createOffer()
+                        .then(offer => pc.setLocalDescription(offer))
+                        .then(() => {
+                            console.log('[VOICE] rtc-offer ENVIADO a:', targetUserId);
+                            s.emit('rtc-offer', { toUserId: targetUserId, offer: pc.localDescription });
+                        });
+                    }, 300);
                 }
             });
-            if (isInitiator) {
-                setTimeout(() => {   
-                    pc.createOffer()
-                    .then(offer => pc.setLocalDescription(offer))
-                    .then(() => {
-                        console.log('[VOICE] rtc-offer ENVIADO a:', targetUserId);
-                        s.emit('rtc-offer', { toUserId: targetUserId, offer: pc.localDescription });
-
-                    });
-                }, 300);
-            }
-        });
+        }
 
         return pc;
     }, [socketRef, deafened, getLocalStream]);
@@ -198,57 +215,61 @@ export const VoiceChatPanel: React.FC<Props> = ({
         }
 
         // Estado de partida
-        const onEstado = ({ activo }: { activo: boolean }) => {
+        const onEstado = ({ activo, fightId: newFightId }: { activo: boolean; fightId?: string }) => {
             console.log('[VOICE] estado_chat recibido:', activo, '| pendingPeers:', pendingPeersRef.current.length);
-            setChatActive(activo);
-            chatActiveRef.current = activo;
             if (!activo) {
-                // Limpiar conexiones al terminar
-                peerConnsRef.current.forEach(pc => pc.close());
-                peerConnsRef.current.clear();
-                remoteAudiosRef.current.forEach(a => a.remove());
-                remoteAudiosRef.current.clear();
-                setPeers([]);
-                pendingPeersRef.current = [];
-            } else {
-                tryConnectPendingPeers(); 
+                cleanupAllConnections();
+                setChatActive(false);
+                chatActiveRef.current = false;
+                currentFightIdRef.current = null;
+                return;
             }
+            // Si cambió el fightId, limpiar conexiones de la pelea anterior
+            if (newFightId && currentFightIdRef.current && currentFightIdRef.current !== newFightId) {
+                console.log(`[VOICE] Nueva pelea detectada, limpiando conexiones antiguas`);
+                cleanupAllConnections();
+            }
+            if (newFightId) currentFightIdRef.current = newFightId;
+            setChatActive(true);
+            chatActiveRef.current = true;
+            tryConnectPendingPeers();
         };
 
         // Lista de usuarios autorizados → iniciar conexiones
-        const onListaSockets = (lista: { socketId: string; userId: string; username: string }[]) => {
+        const onListaSockets = (lista: ListaSocketItem[]) => {
             console.log('[VOICE] listaSockets recibido:', lista, '| chatActive:', chatActiveRef.current, '| isPlayer:', isPlayer);
-            if (!isPlayer) return;
             lista.forEach(item => {
-            console.log(`[VOICE] item: ${item.userId} | yo: ${userId} | diferente: ${item.userId !== userId} | ya conectado: ${peerConnsRef.current.has(item.userId)}`);
-            if (item.userId !== userId && !peerConnsRef.current.has(item.userId)) {
-                const isInitiator = userId > item.userId;
-                console.log(`[VOICE] Intentando conectar con ${item.userId} | soyIniciador: ${isInitiator} | chatActive: ${chatActiveRef.current}`);
+                if (!item.userId || item.userId === userId) return;
+                if (peerConnsRef.current.has(item.userId)) return;
+
+                let isInitiator = false;
+                if (isPlayer) {
+                    isInitiator = item.playerType === 'SPECTATOR' ? true : userId > item.userId;
+                }
+
+                console.log(`[VOICE] Conectando con ${item.userId} [${item.playerType}] | soyIniciador: ${isInitiator}`);
+
                 if (chatActiveRef.current) {
-                    getLocalStream()
-                    .then(() => {
-                    console.log('[VOICE] Stream obtenido, creando peer conn...');
-                    createPeerConn(item.userId, isInitiator);
-                    })
-                    .catch(err => {
-                        console.error('[VOICE] ERROR obteniendo mic:', err);
-                        addSystemMsg(`🎤 Sin acceso al micrófono: ${err.message}`);
-                });
+                    if (isPlayer) {
+                        getLocalStream()
+                            .then(() => createPeerConn(item.userId, isInitiator))
+                            .catch(err => addSystemMsg(`🎤 Sin acceso al micrófono: ${err.message}`));
+                    } else {
+                        // Espectador conecta sin micrófono para recibir audio
+                        createPeerConn(item.userId, false);
+                    }
                 } else {
-                    console.log('[VOICE] chatActive es false, añadiendo a pending...');
                     if (!pendingPeersRef.current.find(p => p.userId === item.userId)) {
                         pendingPeersRef.current.push({ userId: item.userId, isInitiator });
                     }
                 }
-            }
-        });
-    };
+            });
+        };
 
         // Señalización WebRTC
         const onOffer = async ({ fromUserId, offer }: any) => {
             console.log('[VOICE] rtc-offer RECIBIDO de:', fromUserId);
-        const stream = await getLocalStream().catch(() => null);
-        if (!stream) return;
+        const stream = isPlayer ? await getLocalStream().catch(() => null) : null;
 
         // Reutiliza la pc existente o crea una nueva
         let pc = peerConnsRef.current.get(fromUserId);
@@ -277,11 +298,13 @@ export const VoiceChatPanel: React.FC<Props> = ({
         }
         
         // Solo agrega tracks si no están ya
-        stream.getTracks().forEach(t => {
-            if (!pc!.getSenders().find(sender => sender.track === t)) {
-                pc!.addTrack(t, stream);
-            }
-        });
+        if (stream && isPlayer) {
+            stream.getTracks().forEach(t => {
+                if (!pc!.getSenders().find(sender => sender.track === t)) {
+                    pc!.addTrack(t, stream);
+                }
+            });
+        }
         
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await pc.createAnswer();
@@ -372,7 +395,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
             s.off('connect',             onConnect);      
             s.off('identificado',        onIdentificado);
         };
-    }, [socketRef.current, userId, isPlayer, deafened, createPeerConn, getLocalStream]);
+    }, [socketRef.current, userId, isPlayer, deafened, createPeerConn, getLocalStream, cleanupAllConnections]);
 
     // ── PTT ───────────────────────────────────────────────────────
     const startTalking = useCallback(async () => {
