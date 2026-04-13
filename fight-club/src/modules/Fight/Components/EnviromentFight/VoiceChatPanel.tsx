@@ -181,7 +181,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                             console.log('[VOICE] rtc-offer ENVIADO a:', targetUserId);
                             s.emit('rtc-offer', { toUserId: targetUserId, offer: pc.localDescription });
                         });
-                    }, 300);
+                    }, 1500);
                 }
             });
         }
