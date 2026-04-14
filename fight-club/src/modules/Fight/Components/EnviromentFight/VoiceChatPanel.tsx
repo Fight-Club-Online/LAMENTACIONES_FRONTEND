@@ -94,6 +94,41 @@ export const VoiceChatPanel: React.FC<Props> = ({
         pendingPeersRef.current = [];
     }, []);
 
+    // ── Solicitar mic al montar si es jugador ─────────────────
+    useEffect(() => {
+        if (!isPlayer) return;
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                stream.getAudioTracks()[0].enabled = false;
+                localStreamRef.current = stream;
+                console.log('[MIC] Permiso concedido anticipadamente');
+            })
+            .catch(err => console.warn('[MIC] Permiso denegado:', err.message));
+    }, [isPlayer]);
+
+    // ── Cuando el rol cambia a PLAYER helper tomó control ──
+    useEffect(() => {
+        if (!isPlayer || !chatActiveRef.current) return;
+        if (localStreamRef.current) return; // ya tiene stream
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                stream.getAudioTracks()[0].enabled = false;
+                localStreamRef.current = stream;
+                peerConnsRef.current.forEach((pc, peerId) => {
+                    if (pc.connectionState === 'connected') {
+                        stream.getTracks().forEach(t => pc.addTrack(t, stream));
+                        pc.createOffer()
+                            .then(offer => pc.setLocalDescription(offer))
+                            .then(() => socketRef.current?.emit('rtc-offer', {
+                                toUserId: peerId,
+                                offer: pc.localDescription
+                            }));
+                    }
+                });
+            })
+            .catch(console.warn);
+    }, [isPlayer]);
+
     // ── Auto-scroll ──────────────────────────────────────────────
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -184,10 +219,20 @@ export const VoiceChatPanel: React.FC<Props> = ({
                     }, 1500);
                 }
             });
+        } else if (isInitiator) {
+            // Espectador inicia sin tracks solo recibe audio
+            setTimeout(() => {
+                pc.createOffer({ offerToReceiveAudio: true })
+                .then(offer => pc.setLocalDescription(offer))
+                .then(() => {
+                    console.log('[VOICE] Espectador rtc-offer ENVIADO a:', targetUserId);
+                    s.emit('rtc-offer', { toUserId: targetUserId, offer: pc.localDescription });
+                });
+            }, 1500);
         }
 
         return pc;
-    }, [socketRef, deafened, getLocalStream]);
+    }, [socketRef, deafened, getLocalStream, isPlayer]);
 
         const tryConnectPendingPeers = useCallback(() => {
         pendingPeersRef.current.forEach(({ userId: peerId, isInitiator }) => {
@@ -245,19 +290,15 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 let isInitiator = false;
                 if (isPlayer) {
                     isInitiator = item.playerType === 'SPECTATOR' ? true : userId > item.userId;
+                } else {
+                    // Espectador inicia hacia jugadores con ID mayor
+                    isInitiator = item.playerType === 'PLAYER' && userId > item.userId;
                 }
 
                 console.log(`[VOICE] Conectando con ${item.userId} [${item.playerType}] | soyIniciador: ${isInitiator}`);
 
                 if (chatActiveRef.current) {
-                    if (isPlayer) {
-                        getLocalStream()
-                            .then(() => createPeerConn(item.userId, isInitiator))
-                            .catch(err => addSystemMsg(`🎤 Sin acceso al micrófono: ${err.message}`));
-                    } else {
-                        // Espectador conecta sin micrófono para recibir audio
-                        createPeerConn(item.userId, false);
-                    }
+                    createPeerConn(item.userId, isInitiator);
                 } else {
                     if (!pendingPeersRef.current.find(p => p.userId === item.userId)) {
                         pendingPeersRef.current.push({ userId: item.userId, isInitiator });
@@ -265,6 +306,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 }
             });
         };
+
 
         // Señalización WebRTC
         const onOffer = async ({ fromUserId, offer }: any) => {

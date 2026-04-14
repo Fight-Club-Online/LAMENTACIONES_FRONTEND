@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
@@ -49,6 +49,19 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         userData?.username ?? null,
         isPlayerInFight ? 'PLAYER' : 'SPECTATOR'  
     );
+
+    // ── Re-registrar en voz cuando cambia a PLAYER  con helper ──
+    useEffect(() => {
+        const s = voiceSocketRef.current;
+        if (!s || !isPlayerInFight || !fightId) return;
+        s.emit('join_fight', {
+            fightId,
+            userId,
+            username: userData?.username ?? null,
+            playerType: 'PLAYER'
+        });
+        console.log('[VOICE] Rol actualizado a PLAYER');
+    }, [isPlayerInFight]);
 
     useKeyboardControls(sendAction, !!gameState?.active);
 
