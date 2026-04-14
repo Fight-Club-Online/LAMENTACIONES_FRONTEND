@@ -42,14 +42,14 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         if (!gameState) return false;
         return gameState.player1.userId === userId || gameState.player2.userId === userId;
     }, [gameState, userId]);
-
+    
     const voiceSocketRef = useVoiceChat(
-        fightId || null,
+        gameState ? (fightId || null) : null,
         userId,
         userData?.username ?? null,
         isPlayerInFight ? 'PLAYER' : 'SPECTATOR'  
     );
-
+    
     // ── Re-registrar en voz cuando cambia a PLAYER  con helper ──
     useEffect(() => {
         const s = voiceSocketRef.current;
