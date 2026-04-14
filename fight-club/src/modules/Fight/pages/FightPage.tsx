@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
@@ -7,6 +7,10 @@ import ArenaCanvas from '../Components/EnviromentFight/ArenaCanvas';
 import FightHUD from '../Components/EnviromentFight/FightHUD';
 import { SelectCharacters } from './SelectCharacters';
 import backgroundImage from '../../../assets/Background.jpeg';
+import { FightResultScreen } from '../Components/EnviromentFight/FightResultScreen';
+import { useVoiceChat } from '../Hooks/useVoiceChat';
+import { VoiceChatPanel } from '../Components/EnviromentFight/VoiceChatPanel';
+
 
 type FightPageInnerProps = {
     fightId: string;
@@ -15,6 +19,9 @@ type FightPageInnerProps = {
 
 const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     const navigate = useNavigate();
+    const fightResultRef = useRef<'WIN' | 'LOSE' | 'DRAW' | null>(null)
+    const [showChat, setShowChat] = React.useState(true);
+
 
     const { 
         gameState, 
@@ -29,28 +36,65 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         takeBack
     } = useFightWebsocket(fightId || '', userId);
 
+    const userData = getUserData();
+
+    const isPlayerInFight = useMemo(() => {
+        if (!gameState) return false;
+        return gameState.player1.userId === userId || gameState.player2.userId === userId;
+    }, [gameState, userId]);
+    
+    const voiceSocketRef = useVoiceChat(
+        gameState ? (fightId || null) : null,
+        userId,
+        userData?.username ?? null,
+        isPlayerInFight ? 'PLAYER' : 'SPECTATOR'  
+    );
+    
+    // ── Re-registrar en voz cuando cambia a PLAYER  con helper ──
+    useEffect(() => {
+        const s = voiceSocketRef.current;
+        if (!s || !isPlayerInFight || !fightId) return;
+        s.emit('join_fight', {
+            fightId,
+            userId,
+            username: userData?.username ?? null,
+            playerType: 'PLAYER'
+        });
+        console.log('[VOICE] Rol actualizado a PLAYER');
+    }, [isPlayerInFight]);
+
     useKeyboardControls(sendAction, !!gameState?.active);
 
     const fightPhase = useMemo(() => {
+        if (fightResultRef.current) return 'finished';
         if (!gameState) return 'loading';
         const bothHaveCharacters = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
+        if (!gameState.active && bothHaveCharacters) {
+            const p1Dead = (gameState.player1.health?.currentHealth ?? 1) <= 0;
+            const p2Dead = (gameState.player2.health?.currentHealth ?? 1) <= 0;
+            if (p1Dead || p2Dead) return 'finished';
+        }
         if (!gameState.active && !bothHaveCharacters) return 'character-selection';
         if (!gameState.active && bothHaveCharacters) return 'ready-to-start';
         return 'fighting';
     }, [gameState]);
 
     const fightResult = useMemo(() => {
+        if (fightResultRef.current) return fightResultRef.current
         if (!gameState || gameState.active) return null;
         if (!gameState.player1.health || !gameState.player2.health) return null;
 
         const p1Dead = gameState.player1.health.currentHealth <= 0;
         const p2Dead = gameState.player2.health.currentHealth <= 0;
-
-        if (p1Dead && p2Dead) return 'DRAW';
-        if (p1Dead) return gameState.player2.userId === userId ? 'WIN' : 'LOSE';
-        if (p2Dead) return gameState.player1.userId === userId ? 'WIN' : 'LOSE';
-
-        return null;
+        if (!p1Dead && !p2Dead) return null;
+        
+        let result: 'WIN' | 'LOSE' | 'DRAW';
+        if (p1Dead && p2Dead) result = 'DRAW';
+        else if (p1Dead) result = gameState.player2.userId === userId ? 'WIN' : 'LOSE';
+        else result = gameState.player1.userId === userId ? 'WIN' : 'LOSE';
+        
+        fightResultRef.current = result; 
+        return result;
     }, [gameState, userId]);
 
     if (isLoading && !gameState) {
@@ -102,132 +146,116 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         );
     }
 
+    if (fightPhase === 'finished' && fightResult) {
+        return (
+        <FightResultScreen
+         result={fightResult}
+         gameState={gameState!}
+         userId={userId}
+        />
+       );
+    }
+
     return (
-        <main className="relative h-screen w-screen bg-black flex flex-col items-center justify-center p-4 overflow-hidden">
+        <main className="relative h-screen w-screen bg-black flex overflow-hidden">
             
-            {/* BACKGROUND LAYER: Imagen borrosa con oscurecimiento */}
-            <div 
-                className="absolute inset-0 z-0 scale-110"
-                style={{
-                    backgroundImage: `url(${backgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: 'blur(12px) brightness(0.3) saturate(1.2)',
-                }}
-            />
+            {/*  ARENA */}
+            <div className="relative flex-1 flex flex-col overflow-hidden">
 
-            {/* Status de Conexión Estilizado */}
-            <div className="absolute top-4 right-6 flex items-center gap-3 z-50 bg-black/40 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-sm">
-                <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'} animate-pulse`} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
-                    {isConnected ? 'Sistema Online' : 'Fallo de Red'}
-                </span>
-            </div>
-
-            {/* HUD Inferior: Controles Desktop */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:flex gap-6 text-white/30 text-[10px] font-black tracking-[0.2em] uppercase z-10">
-                <span className="px-2 py-1 border border-white/5 rounded">WASD: Mover</span>
-                <span className="px-2 py-1 border border-white/5 rounded">J: Ataque</span>
-                <span className="px-2 py-1 border border-white/5 rounded">K: Especial</span>
-            </div>
-
-            {/* Capa de juego principal */}
-            <div className="relative z-20 flex flex-col items-center justify-center w-full h-full">
-                <FightHUD 
-                    gameState={gameState}
-                    userId={userId}
-                    onStart={startFight}
-                    onHelp={askForHelp}
-                    onClaim={claimHelp}
-                    onTakeBack={takeBack}
+                {/* Fondo borroso */}
+                <div
+                    className="absolute inset-0 z-0 scale-110"
+                    style={{
+                        backgroundImage: `url(${backgroundImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'blur(12px) brightness(0.3) saturate(1.2)',
+                    }}
                 />
-                <ArenaCanvas gameState={gameState} />
+
+                {/* Status conexión — ahora right-4 para no solapar el chat */}
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-50 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-sm">
+                    <span className={`w-2 h-2 rounded-full animate-pulse ${isConnected ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                        {isConnected ? 'Online' : 'Error'}
+                    </span>
+                </div>
+
+                {/* HUD — posición absoluta sobre todo el ancho de la arena */}
+                <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
+                    <div className="pointer-events-auto">
+                        <FightHUD
+                        gameState={gameState}
+                        userId={userId}
+                        onStart={startFight}
+                        onHelp={askForHelp}
+                        onClaim={claimHelp}
+                        onTakeBack={takeBack}
+                    />
+                    </div>
+                </div>
+                
+                {/* Canvas — ocupa todo el espacio disponible */}
+                <div className="relative z-20 flex-1 flex items-center justify-center pt-20 pb-8">
+                    <ArenaCanvas gameState={gameState} />
+                    </div>
+
+                {/* Hint controles desktop */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden md:flex gap-4 text-white/20 text-[9px] font-black tracking-[0.2em] uppercase z-10">
+                    <span className="px-2 py-1 border border-white/5 rounded">WASD: Mover</span>
+                    <span className="px-2 py-1 border border-white/5 rounded">J: Ataque</span>
+                    <span className="px-2 py-1 border border-white/5 rounded">K: Especial</span>
+                </div>
+
+                {/* Mobile Controls */}
+                 {isPlayerInFight && <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none md:hidden z-30">
+                    <div className="flex flex-col gap-4 pointer-events-auto">
+                        <button
+                            onTouchStart={() => sendAction('JUMP')}
+                            className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform flex items-center justify-center"
+                        >
+                            W
+                        </button>
+                        <div className="flex gap-3">
+                            <button onTouchStart={() => sendAction('MOVE_LEFT')} onTouchEnd={() => sendAction('IDLE')}
+                                className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform">A</button>
+                            <button onTouchStart={() => sendAction('BLOCK')} onTouchEnd={() => sendAction('IDLE')}
+                                className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform">S</button>
+                            <button onTouchStart={() => sendAction('MOVE_RIGHT')} onTouchEnd={() => sendAction('IDLE')}
+                                className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform">D</button>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 pointer-events-auto">
+                        <button onTouchStart={() => sendAction('BASIC_ATTACK')}
+                            className="w-20 h-20 bg-red-600/40 backdrop-blur-md text-white font-black rounded-full border-4 border-red-500/50 active:scale-75 transition-transform shadow-[0_0_20px_rgba(220,38,38,0.3)]">J</button>
+                        <button onTouchStart={() => sendAction('SPECIAL_ATTACK')}
+                            className="w-20 h-20 bg-purple-600/40 backdrop-blur-md text-white font-black rounded-full border-4 border-purple-500/50 active:scale-75 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)]">K</button>
+                    </div>
+                </div>}
             </div>
-
-            {/* Mobile Controls: Rediseño más limpio y con feedback visual */}
-            <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none md:hidden z-30">
-                <div className="flex flex-col gap-4 pointer-events-auto">
-                    <button 
-                        onTouchStart={() => sendAction('JUMP')}
-                        className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform flex items-center justify-center"
-                    >
-                        W
-                    </button>
-                    <div className="flex gap-3">
-                        <button 
-                            onTouchStart={() => sendAction('MOVE_LEFT')}
-                            onTouchEnd={() => sendAction('IDLE')}
-                            className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform"
-                        >
-                            A
-                        </button>
-                        <button 
-                            onTouchStart={() => sendAction('BLOCK')}
-                            onTouchEnd={() => sendAction('IDLE')}
-                            className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform"
-                        >
-                            S
-                        </button>
-                        <button 
-                            onTouchStart={() => sendAction('MOVE_RIGHT')}
-                            onTouchEnd={() => sendAction('IDLE')}
-                            className="w-16 h-16 bg-white/10 backdrop-blur-md text-white font-black rounded-2xl border-2 border-white/20 active:scale-90 active:bg-white/30 transition-transform"
-                        >
-                            D
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex gap-4 pointer-events-auto">
-                    <button 
-                        onTouchStart={() => sendAction('BASIC_ATTACK')}
-                        className="w-20 h-20 bg-red-600/40 backdrop-blur-md text-white font-black rounded-full border-4 border-red-500/50 active:scale-75 transition-transform shadow-[0_0_20px_rgba(220,38,38,0.3)]"
-                    >
-                        J
-                    </button>
-                    <button 
-                        onTouchStart={() => sendAction('SPECIAL_ATTACK')}
-                        className="w-20 h-20 bg-purple-600/40 backdrop-blur-md text-white font-black rounded-full border-4 border-purple-500/50 active:scale-75 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)]"
-                    >
-                        K
-                    </button>
+            
+            {/* ── BOTÓN TOGGLE CHAT ── */}
+            <button
+            onClick={() => setShowChat(p => !p)}
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-50 flex-col items-center justify-center w-5 h-16 bg-white/5 hover:bg-white/10 border-l border-t border-b border-white/10 rounded-l-lg transition-all"
+            style={{ right: showChat ? '288px' : '0px' }}
+            title={showChat ? 'Ocultar chat' : 'Mostrar chat'}
+            >
+                <span className="text-white/40 text-[10px]">{showChat ? '›' : '‹'}</span>
+                </button>
+                
+            {/* ── PANEL DE CHAT (columna derecha fija) ── */}
+            <div className={`hidden md:flex flex-shrink-0 flex-col border-l border-white/5 bg-black/70 backdrop-blur-md transition-all duration-300 overflow-hidden ${showChat ? 'w-72' : 'w-0'}`}>
+            <div className="w-72 h-full flex flex-col">
+                <VoiceChatPanel
+                key={fightId}
+                socketRef={voiceSocketRef}
+                userId={userId}
+                username={userData?.username || userId}
+                isPlayer={isPlayerInFight}
+                />
                 </div>
             </div>
-
-            {/* Overlay de Victoria/Derrota: Mejorado con Blur y Tipografía Masiva */}
-            {fightResult && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-xl flex flex-col items-center justify-center z-[100] animate-fadeIn">
-                    <div className="relative group">
-                        <h2 className={`text-9xl font-black italic mb-2 tracking-tighter transition-all ${
-                            fightResult === 'WIN' ? 'text-green-500 drop-shadow-[0_0_30px_#22c55e]' : 
-                            fightResult === 'LOSE' ? 'text-red-600 drop-shadow-[0_0_30px_#dc2626]' : 
-                            'text-yellow-500 drop-shadow-[0_0_30px_#eab308]'
-                        }`}>
-                            {fightResult === 'WIN' ? 'VICTORIA' : 
-                             fightResult === 'LOSE' ? 'DERROTA' : 
-                             'EMPATE'}
-                        </h2>
-                        <div className="absolute -bottom-2 left-0 w-full h-1 bg-current opacity-50" />
-                    </div>
-                    
-                    <p className="text-white font-black text-4xl mt-4 mb-12 tracking-[0.5em] opacity-80">K.O.</p>
-                    
-                    <div className="flex gap-6">
-                        <button 
-                            onClick={() => navigate('/lobby')}
-                            className="bg-white text-black px-12 py-4 font-black italic uppercase hover:bg-zinc-200 transition-all transform hover:-skew-x-12 active:scale-95 cursor-pointer"
-                        >
-                            VOLVER AL LOBBY
-                        </button>
-                        <button 
-                            onClick={() => window.location.reload()}
-                            className="bg-red-600 text-white px-12 py-4 font-black italic uppercase hover:bg-red-500 transition-all transform hover:-skew-x-12 active:scale-95 shadow-lg shadow-red-600/20 cursor-pointer"
-                        >
-                            REVANCHA
-                        </button>
-                    </div>
-                </div>
-            )}
         </main>
     );
 };
