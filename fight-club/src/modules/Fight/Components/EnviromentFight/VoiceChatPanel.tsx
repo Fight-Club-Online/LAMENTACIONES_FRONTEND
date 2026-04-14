@@ -94,6 +94,24 @@ export const VoiceChatPanel: React.FC<Props> = ({
         pendingPeersRef.current = [];
     }, []);
 
+    // Limpieza completa al desmontar el componente
+    useEffect(() => {
+        return () => {
+            peerConnsRef.current.forEach(pc => pc.close());
+            peerConnsRef.current.clear();
+            remoteAudiosRef.current.forEach(audio => {
+                audio.srcObject = null;
+                audio.remove();
+            });
+            remoteAudiosRef.current.clear();
+            // Detener el stream local 
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach(track => track.stop());
+                localStreamRef.current = null;
+            }
+        };
+    }, []);
+
     // ── Solicitar mic al montar si es jugador ─────────────────
     useEffect(() => {
         if (!isPlayer) return;
@@ -219,31 +237,25 @@ export const VoiceChatPanel: React.FC<Props> = ({
                     }, 1500);
                 }
             });
-        } else if (isInitiator) {
-            // Espectador inicia sin tracks solo recibe audio
-            setTimeout(() => {
-                pc.createOffer({ offerToReceiveAudio: true })
-                .then(offer => pc.setLocalDescription(offer))
-                .then(() => {
-                    console.log('[VOICE] Espectador rtc-offer ENVIADO a:', targetUserId);
-                    s.emit('rtc-offer', { toUserId: targetUserId, offer: pc.localDescription });
-                });
-            }, 1500);
         }
 
         return pc;
     }, [socketRef, deafened, getLocalStream, isPlayer]);
-
-        const tryConnectPendingPeers = useCallback(() => {
-        pendingPeersRef.current.forEach(({ userId: peerId, isInitiator }) => {
+    
+    const tryConnectPendingPeers = useCallback(() => {
+        pendingPeersRef.current.forEach(({ userId: peerId }) => {
             if (!peerConnsRef.current.has(peerId)) {
-                getLocalStream()
-                    .then(() => createPeerConn(peerId, isInitiator))
+                if (isPlayer) {
+                    getLocalStream()
+                    .then(() => createPeerConn(peerId, true))
                     .catch(err => addSystemMsg(`🎤 Sin acceso al micrófono: ${err.message}`));
+                } else {
+                    createPeerConn(peerId, false);
+                }
             }
         });
         pendingPeersRef.current = [];
-    }, [createPeerConn, getLocalStream]);
+    }, [createPeerConn, getLocalStream, isPlayer]);
 
     // ── Socket events ─────────────────────────────────────────────
     useEffect(() => {
@@ -291,8 +303,8 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 if (isPlayer) {
                     isInitiator = item.playerType === 'SPECTATOR' ? true : userId > item.userId;
                 } else {
-                    // Espectador inicia hacia jugadores con ID mayor
-                    isInitiator = item.playerType === 'PLAYER' && userId > item.userId;
+                    // Espectadores NUNCA inician solo reciben ofertas de los jugadores.
+                    isInitiator = false;
                 }
 
                 console.log(`[VOICE] Conectando con ${item.userId} [${item.playerType}] | soyIniciador: ${isInitiator}`);
