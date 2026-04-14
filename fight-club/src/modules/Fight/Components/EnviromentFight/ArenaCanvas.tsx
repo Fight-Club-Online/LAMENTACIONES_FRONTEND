@@ -7,7 +7,7 @@ interface Props {
     gameState: Fight | null;
 }
 
-const LERP_SPEED = 0.25;
+const LERP_SPEED = 0.4; 
 const GROUND_Y = CANVAS_CONFIG.HEIGHT - CANVAS_CONFIG.GROUND_Y_OFFSET;
 
 const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
@@ -42,13 +42,11 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
             const action = fighter.currentAction as string;
             const actionColor = isDead ? '#4b5563' : (ACTION_STYLES[action] || ACTION_STYLES.IDLE);
 
-            // Sombra/Suelo 
             ctx.fillStyle = isDead ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)';
             ctx.beginPath();
             ctx.ellipse(x + CANVAS_CONFIG.FIGHTER_WIDTH / 2, GROUND_Y, 35, 8, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Cuerpo del Guerrero
             ctx.save();
             if (isDead) {
                 ctx.filter = 'grayscale(100%) brightness(0.7)';
@@ -62,7 +60,6 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
             ctx.roundRect(x, y, CANVAS_CONFIG.FIGHTER_WIDTH, CANVAS_CONFIG.FIGHTER_HEIGHT, 10);
             ctx.fill();
             
-            // Ojo
             ctx.fillStyle = isDead ? '#2d3748' : 'white'; 
             const eyeX = fighter.direction === 'RIGHT' ? x + 42 : x + 8;
             ctx.fillRect(eyeX, y + 25, 15, 6);
@@ -78,7 +75,6 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
                 ctx.save();
                 ctx.filter = 'brightness(0.6)';
                 ctx.drawImage(backgroundRef.current, 0, 0, CANVAS_CONFIG.WIDTH, CANVAS_CONFIG.HEIGHT);
-                
                 const gradient = ctx.createRadialGradient(
                     CANVAS_CONFIG.WIDTH / 2, CANVAS_CONFIG.HEIGHT / 2, 0,
                     CANVAS_CONFIG.WIDTH / 2, CANVAS_CONFIG.HEIGHT / 2, CANVAS_CONFIG.WIDTH / 1.2
@@ -110,14 +106,9 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
 
     const getDominantColor = () => {
         if (!gameState) return ACTION_COLORS_HEX.IDLE;
-        
-        if ((gameState.player1.health?.currentHealth ?? 0) <= 0 || (gameState.player2.health?.currentHealth ?? 0) <= 0) {
-            return '#374151'; 
-        }
-
+        if ((gameState.player1.health?.currentHealth ?? 0) <= 0 || (gameState.player2.health?.currentHealth ?? 0) <= 0) return '#374151'; 
         const p1 = gameState.player1.currentAction;
         const p2 = gameState.player2.currentAction;
-
         if (p1 === 'HURT' || p2 === 'HURT') return ACTION_COLORS_HEX.HURT;
         if (p2 !== 'IDLE') return ACTION_COLORS_HEX[p2] || ACTION_COLORS_HEX.IDLE;
         return ACTION_COLORS_HEX[p1] || ACTION_COLORS_HEX.IDLE;
@@ -133,20 +124,10 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
                     className={`absolute -inset-4 md:-inset-12 rounded-full blur-[50px] md:blur-[100px] transition-all duration-500 ${isAnyoneHurt ? 'opacity-50 scale-110' : 'opacity-20'}`}
                     style={{ backgroundColor: borderColor }}
                 ></div>
-
-                <div 
-                    className="relative w-full h-full rounded-xl p-[1px] md:p-[3px] transition-all duration-200"
-                    style={{ 
-                        backgroundColor: `${borderColor}66`, 
-                        boxShadow: `0 0 30px ${borderColor}33` 
-                    }}
-                >
-                    <canvas
-                        ref={canvasRef}
-                        width={CANVAS_CONFIG.WIDTH}
-                        height={CANVAS_CONFIG.HEIGHT}
-                        className="w-full h-full rounded-lg shadow-2xl block bg-zinc-900"
-                    />
+                <div className="relative w-full h-full rounded-xl p-[1px] md:p-[3px] transition-all duration-200"
+                    style={{ backgroundColor: `${borderColor}66`, boxShadow: `0 0 30px ${borderColor}33` }}>
+                    <canvas ref={canvasRef} width={CANVAS_CONFIG.WIDTH} height={CANVAS_CONFIG.HEIGHT}
+                        className="w-full h-full rounded-lg shadow-2xl block bg-zinc-900" />
                 </div>
             </div>
         </div>
