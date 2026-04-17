@@ -42,26 +42,26 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         if (!gameState) return false;
         return gameState.player1.userId === userId || gameState.player2.userId === userId;
     }, [gameState, userId]);
-    
+
     const voiceSocketRef = useVoiceChat(
-        gameState ? (fightId || null) : null,
+        fightId || null,
         userId,
         userData?.username ?? null,
         isPlayerInFight ? 'PLAYER' : 'SPECTATOR'  
     );
-    
-    // ── Re-registrar en voz cuando cambia a PLAYER  con helper ──
+
+    // Emitir PLAYER o SPECTATOR según el rol actual
     useEffect(() => {
         const s = voiceSocketRef.current;
-        if (!s || !isPlayerInFight || !fightId) return;
+        if (!s || !fightId) return; 
         s.emit('join_fight', {
             fightId,
             userId,
             username: userData?.username ?? null,
-            playerType: 'PLAYER'
+            playerType: isPlayerInFight ? 'PLAYER' : 'SPECTATOR'
         });
-        console.log('[VOICE] Rol actualizado a PLAYER');
-    }, [isPlayerInFight]);
+        console.log(`[VOICE] Rol actualizado a ${isPlayerInFight ? 'PLAYER' : 'SPECTATOR'}`);
+    }, [isPlayerInFight, fightId, userId, userData?.username]);
 
     useKeyboardControls(sendAction, !!gameState?.active);
 
