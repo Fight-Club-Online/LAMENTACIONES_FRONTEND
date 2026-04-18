@@ -26,16 +26,16 @@ export const HistoryPanel = () => {
     const [history, setHistory] = useState<FightRecord[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const userData = localStorage.getItem('user_data');
-        if (!userData) return;
-        const { userId } = JSON.parse(userData);
-
-        axios.get(`${import.meta.env.VITE_API_FIGHT_URL}/fight/history/${userId}`)
-            .then(res => setHistory(res.data))
-            .catch(() => setHistory([]))
-            .finally(() => setLoading(false));
-    }, []);
+useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (!userData) return;
+    const { userId } = JSON.parse(userData);
+    const FIGHT_API = import.meta.env.VITE_API_FIGHT_URL || 'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
+    axios.get(`${FIGHT_API}/fight/history/${userId}`)
+     .then(res => setHistory(res.data))
+     .catch(() => setHistory([]))
+     .finally(() => setLoading(false));
+}, []);
 
     return (
         <div className="bg-[#161616] border border-white/5 rounded-2xl p-6 h-full flex flex-col shadow-2xl relative overflow-hidden group">
