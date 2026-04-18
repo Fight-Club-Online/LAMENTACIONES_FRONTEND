@@ -8,6 +8,7 @@ interface Props {
     result: Result;
     gameState: Fight | null;
     userId: string;
+    pointsChange?: number;
 }
 
 const REDIRECT_SECONDS = 10;
@@ -101,7 +102,7 @@ function hpColor(pct: number) {
     return '#dc2626';
 }
 
-export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId }) => {
+export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId, pointsChange }) => {
     const navigate    = useNavigate();
     const [cd, setCd] = useState(REDIRECT_SECONDS);
     const cfg         = RESULT_CONFIG[result];
@@ -204,11 +205,23 @@ export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId }
                         { label: 'HP rival', value: `${rivalHp}%`, color: '#71717a'      },
                         { label: 'Nivel',    value: String(myFighter?.characterLevel ?? '?'), color: '#a78bfa' },
                     ].map(s => (
-                        <div key={s.label} className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-center min-w-[80px]">
-                            <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1">{s.label}</p>
-                            <p className="text-xl font-black" style={{ color: s.color }}>{s.value}</p>
-                        </div>
+                    <div key={s.label} className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-center min-w-[80px]">
+                        <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1">{s.label}</p>
+                        <p className="text-xl font-black" style={{ color: s.color }}>{s.value}</p>
+                    </div>
                     ))}
+                    
+                    {/* Card de puntos dentro del mismo flex */}
+                    {pointsChange !== undefined && (
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-center min-w-[80px]">
+                            <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1">Puntos</p>
+                            <p className="text-xl font-black" style={{
+                                color: pointsChange >= 0 ? '#22c55e' : '#ef4444'
+                            }}>
+                                {pointsChange >= 0 ? `+${pointsChange}` : pointsChange}
+                                </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Barra HP del ganador */}

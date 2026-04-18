@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const VOICE_CHAT_URL = import.meta.env.VITE_API_VOICE_CHAT_URL || 'https://lamentaciones-voice-chat-a7czbaa5h3drb6gv.canadacentral-01.azurewebsites.net';
+const VOICE_CHAT_URL = import.meta.env.VITE_API_VOICE_CHAT_URL || 'https://lamentaciones-chat-voz-c8csfrfhgyb3d5hu.canadacentral-01.azurewebsites.net';
 
 export const useVoiceChat = (fightId: string | null, userId: string | null, username: string | null, playerType: string = 'PLAYER') => {
     const socketRef = useRef<Socket | null>(null);

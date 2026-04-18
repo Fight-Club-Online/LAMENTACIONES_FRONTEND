@@ -78,7 +78,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         if (!gameState.active && bothHaveCharacters) return 'ready-to-start';
         return 'fighting';
     }, [gameState]);
-
+    
     const fightResult = useMemo(() => {
         if (fightResultRef.current) return fightResultRef.current
         if (!gameState || gameState.active) return null;
@@ -96,6 +96,13 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
         fightResultRef.current = result; 
         return result;
     }, [gameState, userId]);
+
+    const pointsChange = useMemo(() => {
+        if (!fightResult) return undefined;
+        if (fightResult === 'DRAW') return 5;
+        if (fightResult === 'WIN')  return 28;
+        return -12;
+    }, [fightResult]);
 
     if (isLoading && !gameState) {
         return (
@@ -152,6 +159,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
          result={fightResult}
          gameState={gameState!}
          userId={userId}
+         pointsChange={pointsChange}
         />
        );
     }
