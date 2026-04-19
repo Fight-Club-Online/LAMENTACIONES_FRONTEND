@@ -5,6 +5,11 @@ const VOICE_CHAT_URL = import.meta.env.VITE_API_VOICE_CHAT_URL || 'https://lamen
 
 export const useVoiceChat = (fightId: string | null, userId: string | null, username: string | null, playerType: string = 'PLAYER') => {
     const socketRef = useRef<Socket | null>(null);
+    const playerTypeRef = useRef(playerType);
+    const usernameRef = useRef(username);
+
+    useEffect(() => { playerTypeRef.current = playerType; }, [playerType]);
+    useEffect(() => { usernameRef.current = username; }, [username]);
 
     useEffect(() => {
         if (!fightId || !userId) return;
@@ -18,10 +23,10 @@ export const useVoiceChat = (fightId: string | null, userId: string | null, user
             reconnectionAttempts: 5,
             reconnectionDelay: 1000,
         });
-
+        
         s.on('connect', () => {
             console.log('[Voice] Conectado:', s.id);
-            s.emit('join_fight', { fightId, userId, username: username || userId, playerType });
+            s.emit('join_fight', { fightId, userId, username: usernameRef.current || userId,  playerType: playerTypeRef.current });
         });
 
         s.on('connect_error', (err) => {
@@ -38,7 +43,7 @@ export const useVoiceChat = (fightId: string | null, userId: string | null, user
             s.disconnect();
             socketRef.current = null;
         };
-    }, [fightId, userId, username, playerType]);
+    }, [fightId, userId]);
 
     return socketRef;
 };

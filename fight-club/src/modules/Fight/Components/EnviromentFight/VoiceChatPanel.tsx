@@ -124,27 +124,48 @@ export const VoiceChatPanel: React.FC<Props> = ({
             .catch(err => console.warn('[MIC] Permiso denegado:', err.message));
     }, [isPlayer]);
 
-    // ── Cuando el rol cambia a PLAYER helper tomó control ──
+    // ── Cuando el rol cambia (SPECTATOR ↔ PLAYER), forzar reconexión total ──
+    const prevIsPlayerRef = useRef<boolean | null>(null);
     useEffect(() => {
-        if (!isPlayer || !chatActiveRef.current) return;
-        if (localStreamRef.current) return; // ya tiene stream
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                stream.getAudioTracks()[0].enabled = false;
-                localStreamRef.current = stream;
-                peerConnsRef.current.forEach((pc, peerId) => {
-                    if (pc.connectionState === 'connected') {
-                        stream.getTracks().forEach(t => pc.addTrack(t, stream));
-                        pc.createOffer()
-                            .then(offer => pc.setLocalDescription(offer))
-                            .then(() => socketRef.current?.emit('rtc-offer', {
-                                toUserId: peerId,
-                                offer: pc.localDescription
-                            }));
-                    }
-                });
-            })
-            .catch(console.warn);
+        if (prevIsPlayerRef.current === null) {
+            prevIsPlayerRef.current = isPlayer;
+            return;
+        }
+        if (prevIsPlayerRef.current === isPlayer) return;
+        const wasPlayer = prevIsPlayerRef.current;
+        prevIsPlayerRef.current = isPlayer;
+        console.log(`[VOICE] Rol: ${wasPlayer ? 'PLAYER' : 'SPECTATOR'} → ${isPlayer ? 'PLAYER' : 'SPECTATOR'} | Cerrando conexiones`);
+        
+        peerConnsRef.current.forEach(pc => { try { pc.close(); } catch (_) {} });
+        peerConnsRef.current.clear();
+        
+        remoteAudiosRef.current.forEach(a => {
+            try { a.srcObject = null; a.remove(); } catch (_) {}
+        });
+        
+        remoteAudiosRef.current.clear();
+        setPeers([]);
+        pendingPeersRef.current = [];
+        
+        if (isPlayer) {
+            if (!localStreamRef.current) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                    stream.getAudioTracks()[0].enabled = false; 
+                    localStreamRef.current = stream;
+                    console.log('[MIC] Stream listo para nuevo rol PLAYER');
+                })
+                .catch(err => console.warn('[MIC] Error al obtener micrófono:', err));
+            }
+        } else {
+            if (localStreamRef.current) {
+                localStreamRef.current.getAudioTracks().forEach(t => t.enabled = false);
+                if (wasPlayer) {
+                    localStreamRef.current.getTracks().forEach(t => t.stop());
+                    localStreamRef.current = null;
+                }
+            }
+        }
     }, [isPlayer]);
 
     // ── Auto-scroll ──────────────────────────────────────────────
@@ -218,7 +239,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
             console.log(`[ICE] Estado con ${targetUserId}:`, pc.iceConnectionState);
         };
 
-        // Solo jugadores agregan audio local; espectadores solo reciben
+        // Solo jugadores agregan audio local; espectadores solo reciben 
         if (isPlayer) {
             getLocalStream().then(stream => {
                 stream.getTracks().forEach(t => {
@@ -237,6 +258,16 @@ export const VoiceChatPanel: React.FC<Props> = ({
                     }, 1500);
                 }
             });
+        } else if (isInitiator) {
+            pc.addTransceiver('audio', { direction: 'recvonly' });
+            setTimeout(() => {
+                pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .then(() => {
+                    console.log('[VOICE] rtc-offer ESPECTADOR ENVIADO a:', targetUserId);
+                    s.emit('rtc-offer', { toUserId: targetUserId, offer: pc.localDescription });
+                });
+            }, 500);
         }
 
         return pc;
@@ -261,13 +292,15 @@ export const VoiceChatPanel: React.FC<Props> = ({
     useEffect(() => {
         const s = socketRef.current;
         if (!s) return;
-
+        
         if (s.connected) {
             const pathParts = window.location.pathname.split('/');
             const fightIndex = pathParts.indexOf('fight');
             const fightId = fightIndex !== -1 ? pathParts[fightIndex + 1] : null;
             if (fightId) {
-                s.emit('join_fight', { fightId, userId, username });
+                s.emit('join_fight', { fightId, userId, username, playerType: 
+                    isPlayer ? 'PLAYER' : 'SPECTATOR'  
+                });
             }
         }
 
@@ -297,18 +330,31 @@ export const VoiceChatPanel: React.FC<Props> = ({
             console.log('[VOICE] listaSockets recibido:', lista, '| chatActive:', chatActiveRef.current, '| isPlayer:', isPlayer);
             lista.forEach(item => {
                 if (!item.userId || item.userId === userId) return;
-                if (peerConnsRef.current.has(item.userId)) return;
+                const existingPc = peerConnsRef.current.get(item.userId);
+                if (existingPc) {
+                    const badState = ['disconnected', 'failed', 'closed'].includes(existingPc.connectionState);
+                    if (!badState) return; 
+                    console.log(`[VOICE] Conexión inválida con ${item.userId} (${existingPc.connectionState}) → recreando`);
+                    try { existingPc.close(); } catch (_) {}
+                    peerConnsRef.current.delete(item.userId);
+                    const staleAudio = remoteAudiosRef.current.get(item.userId);
 
+                    if (staleAudio) {
+                        try { staleAudio.srcObject = null; staleAudio.remove(); } catch (_) {}
+                        remoteAudiosRef.current.delete(item.userId);
+                    }
+                    setPeers(prev => prev.filter(id => id !== item.userId));
+                }
+                
                 let isInitiator = false;
                 if (isPlayer) {
-                    isInitiator = item.playerType === 'SPECTATOR' ? true : userId > item.userId;
+                    isInitiator = item.playerType === 'PLAYER' && userId > item.userId;
                 } else {
-                    // Espectadores NUNCA inician solo reciben ofertas de los jugadores.
-                    isInitiator = false;
+                    isInitiator = item.playerType === 'PLAYER';
                 }
 
                 console.log(`[VOICE] Conectando con ${item.userId} [${item.playerType}] | soyIniciador: ${isInitiator}`);
-
+                
                 if (chatActiveRef.current) {
                     createPeerConn(item.userId, isInitiator);
                 } else {
@@ -318,7 +364,6 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 }
             });
         };
-
 
         // Señalización WebRTC
         const onOffer = async ({ fromUserId, offer }: any) => {
@@ -409,7 +454,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
     
             if (fightId) {
-                s.emit('join_fight', { fightId, userId, username });
+                s.emit('join_fight', { fightId, userId, username, playerType: isPlayer ? 'PLAYER' : 'SPECTATOR' });
             } else {
                 s.emit('identificar', { userId, username });
    

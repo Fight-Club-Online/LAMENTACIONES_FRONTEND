@@ -51,15 +51,14 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     );
 
     // Emitir PLAYER o SPECTATOR según el rol actual
+    const hasEmittedPlayerRole = useRef(false);
+    
     useEffect(() => {
         const s = voiceSocketRef.current;
-        if (!s || !fightId) return; 
-        s.emit('join_fight', {
-            fightId,
-            userId,
-            username: userData?.username ?? null,
-            playerType: isPlayerInFight ? 'PLAYER' : 'SPECTATOR'
-        });
+        if (!s || !fightId) return;
+        if (!isPlayerInFight && !hasEmittedPlayerRole.current) return;
+        if (isPlayerInFight) {hasEmittedPlayerRole.current = true;}  
+        s.emit('join_fight', { fightId, userId, username: userData?.username ?? null, playerType: isPlayerInFight ? 'PLAYER' : 'SPECTATOR'});
         console.log(`[VOICE] Rol actualizado a ${isPlayerInFight ? 'PLAYER' : 'SPECTATOR'}`);
     }, [isPlayerInFight, fightId, userId, userData?.username]);
 
