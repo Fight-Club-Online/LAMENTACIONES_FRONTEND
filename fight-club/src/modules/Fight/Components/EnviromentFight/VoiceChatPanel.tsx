@@ -211,6 +211,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
         pc.ontrack = ({ streams }) => {
             console.log('[ONTRACK] Stream remoto recibido de:', targetUserId);
             const stream = streams[0];
+
             let audio = remoteAudiosRef.current.get(targetUserId);
             if (!audio) {
                 audio = document.createElement('audio');
@@ -219,9 +220,14 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 document.body.appendChild(audio);
                 remoteAudiosRef.current.set(targetUserId, audio);
             }
+
             audio.srcObject = stream;
+
+            // ✅ USAR DIRECTAMENTE EL ESTADO
             audio.muted = deafened || mutedUsers.includes(targetUserId);
+
             audio.play().catch(e => console.error('[AUDIO] Autoplay bloqueado:', e));
+
             setPeers(prev => prev.includes(targetUserId) ? prev : [...prev, targetUserId]);
         };
 
@@ -313,6 +319,8 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 setChatActive(false);
                 chatActiveRef.current = false;
                 currentFightIdRef.current = null;
+                setUsuariosEnChat([]);
+                setMutedUsers([]);
                 return;
             }
             // Si cambió el fightId, limpiar conexiones de la pelea anterior
@@ -328,13 +336,17 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
         // Lista de usuarios autorizados → iniciar conexiones
         const onListaSockets = (lista: ListaSocketItem[]) => {
-            setUsuariosEnChat(lista.map(u => ({
+            const jugadores = lista.filter(
+                u => u.playerType === 'PLAYER' && u.userId !== userId
+            );
+
+            setUsuariosEnChat(jugadores.map(u => ({
                 userId: u.userId,
                 username: u.username || 'Anon',
                 socketId: u.socketId
             })));
-            console.log('[VOICE] listaSockets recibido:', lista, '| chatActive:', chatActiveRef.current, '| isPlayer:', isPlayer);
-            lista.forEach(item => {
+            console.log('[USUARIOS CHAT ACTUALIZADOS]', jugadores);
+            jugadores.forEach(item => {
                 if (!item.userId || item.userId === userId) return;
                 const existingPc = peerConnsRef.current.get(item.userId);
                 if (existingPc) {
@@ -436,12 +448,6 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 texto: filtrado,
                 esMio: msg.userId === userId,
             }]);
-            if (msg.userId && msg.userId !== userId) {
-                setUsuariosEnChat(prev => {
-                    if (prev.find(u => u.userId === msg.userId)) return prev;
-                    return [...prev, { userId: msg.userId, username: msg.username }];
-                });
-            }
         };
 
         const onAdvertencia = (data: { mensaje: string }) => {
@@ -505,8 +511,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
             s.off('connect', onConnect);
             s.off('identificado', onIdentificado);
         };
-    }, [socketRef.current, userId, isPlayer, deafened, createPeerConn, getLocalStream, cleanupAllConnections]);
-
+    }, [userId, isPlayer, deafened, createPeerConn, getLocalStream, cleanupAllConnections]);
     // ── PTT ───────────────────────────────────────────────────────
     const startTalking = useCallback(async () => {
         if (!chatActiveRef.current || isMuted || isBanned || !isPlayer) return;
@@ -566,6 +571,11 @@ export const VoiceChatPanel: React.FC<Props> = ({
         setInput('');
     };
     const [mutedUsers, setMutedUsers] = useState<string[]>([]);
+    useEffect(() => {
+        remoteAudiosRef.current.forEach((audio, userId) => {
+            audio.muted = deafened || mutedUsers.includes(userId);
+        });
+    }, [deafened, mutedUsers]);
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.stopPropagation();
         if (e.key === 'Enter') sendMessage();
@@ -574,15 +584,45 @@ export const VoiceChatPanel: React.FC<Props> = ({
         setMutedUsers(prev => {
             let updated;
 
-            if (prev.includes(targetUserId)) {
-                updated = prev.filter(id => id !== targetUserId);
-            } else {
-                updated = [...prev, targetUserId];
-            }
+            const pc = peerConnsRef.current.get(targetUserId);
 
-            const audio = remoteAudiosRef.current.get(targetUserId);
-            if (audio) {
-                audio.muted = deafened || updated.includes(targetUserId);
+            if (prev.includes(targetUserId)) {
+                // 🔊 DESMUTEAR
+                updated = prev.filter(id => id !== targetUserId);
+
+                // 🔊 Volver a escuchar
+                const audio = remoteAudiosRef.current.get(targetUserId);
+                if (audio) {
+                    audio.muted = deafened;
+                }
+
+                // 🔊 Volver a enviarle tu audio
+                pc?.getSenders().forEach(sender => {
+                    if (sender.track?.kind === 'audio') {
+                        sender.track.enabled = true;
+                    }
+                });
+
+                socketRef.current?.emit('unmute_user', { targetUserId });
+
+            } else {
+                // 🔇 MUTEAR
+                updated = [...prev, targetUserId];
+
+                // 🔇 Dejar de escuchar
+                const audio = remoteAudiosRef.current.get(targetUserId);
+                if (audio) {
+                    audio.muted = true;
+                }
+
+                // 🔇 🔥 CLAVE: dejar de enviarle tu audio
+                pc?.getSenders().forEach(sender => {
+                    if (sender.track?.kind === 'audio') {
+                        sender.track.enabled = false;
+                    }
+                });
+
+                socketRef.current?.emit('mute_user', { targetUserId });
             }
 
             return updated;
