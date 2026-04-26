@@ -139,9 +139,10 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
     // --- Resto de funciones de control ---
     const selectCharacter = useCallback((characterId: number) => {
         if (stompClient.current?.connected) {
+            const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
             stompClient.current.publish({
                 destination: `/fightService/fight/${fightId}/selectCharacter`,
-                body: JSON.stringify({ userId, characterId })
+                body: JSON.stringify({ userId, characterId: String(characterId), username: userData.username || userId })
             });
         }
     }, [fightId, userId]);

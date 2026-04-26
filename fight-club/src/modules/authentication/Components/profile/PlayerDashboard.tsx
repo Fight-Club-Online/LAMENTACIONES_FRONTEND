@@ -11,7 +11,9 @@ import { HistoryPanel } from './HistoryPanel';
 
 const DEFAULT_STATS: UserStats = {
     level: 1, points: 0, streak: 0, followers: 0, 
-    totalFights: 0, wins: 0, losses: 0, draws: 0, userId: ''
+    totalFights: 0, wins: 0, losses: 0, draws: 0, userId: '',
+    rank: 'HIERRO_I',
+    achievements: []
 };
 
 export const PlayerDashboard = () => {
@@ -128,10 +130,10 @@ export const PlayerDashboard = () => {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                             <StatsCards stats={stats} />
                         </div>
-
+                        
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <HistoryPanel />
-                            <WinRatePanel stats={stats} />
+                            <WinRatePanel stats={stats} achievements={stats.achievements} />
                         </div>
                     </div>
                 </div>
