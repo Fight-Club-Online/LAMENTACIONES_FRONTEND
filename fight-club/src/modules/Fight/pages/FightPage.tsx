@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
 import { useKeyboardControls } from '../Hooks/useKeyboardControls';
@@ -19,6 +19,8 @@ type FightPageInnerProps = {
 
 const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const navPlayerType = (location.state as any)?.playerType as string | undefined;
     const fightResultRef = useRef<'WIN' | 'LOSE' | 'DRAW' | null>(null)
     const [showChat, setShowChat] = React.useState(true);
 
@@ -37,11 +39,23 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     } = useFightWebsocket(fightId || '', userId);
 
     const userData = getUserData();
-
     const isPlayerInFight = useMemo(() => {
-        if (!gameState) return false;
-        return gameState.player1.userId === userId || gameState.player2.userId === userId;
-    }, [gameState, userId]);
+        const helpBtn = gameState?.helpButton;
+        if (helpBtn?.status === 'CLAIMED' && helpBtn.activatedForUserId === userId) {
+            return false;
+        }
+        if (helpBtn?.status === 'CLAIMED' && helpBtn.claimedByUserId === userId) {
+            return true;
+        }
+        if (!gameState) {
+            if (navPlayerType) return navPlayerType === 'PLAYER';
+            const stored = sessionStorage.getItem(`fight_role_${fightId}`);
+            return stored === 'PLAYER';
+        }
+        const isP = gameState.player1.userId === userId || gameState.player2.userId === userId;
+        sessionStorage.setItem(`fight_role_${fightId}`, isP ? 'PLAYER' : 'SPECTATOR');
+        return isP;
+    }, [gameState, userId, navPlayerType]);
 
     const voiceSocketRef = useVoiceChat(
         fightId || null,

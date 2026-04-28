@@ -16,9 +16,9 @@ const WS_ENDPOINT = `${API_URL}/fightService`;
 
 const FIGHT_INITIAL_FETCH_DELAY_MS = (() => {
     const raw = import.meta.env.VITE_FIGHT_INITIAL_FETCH_DELAY_MS;
-    if (raw === undefined || raw === '') return 800;
+    if (raw === undefined || raw === '') return 0;
     const n = Number(raw);
-    return Number.isFinite(n) && n >= 0 ? n : 800;
+    return Number.isFinite(n) && n >= 0 ? n : 0;
 })();
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
