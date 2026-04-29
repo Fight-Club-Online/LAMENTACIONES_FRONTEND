@@ -4,10 +4,13 @@ import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
 
 interface Message {
     id: string;
+    userId: string;
     username: string;
     texto: string;
     esMio: boolean;
     isSystem?: boolean;
+    source?: 'CHAT' | 'VOICE';
+    timestamp?: string;
 }
 
 interface ListaSocketItem {
@@ -112,7 +115,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
     const cleanupAllConnections = useCallback(() => {
         peerConnsRef.current.forEach(pc => pc.close());
         peerConnsRef.current.clear();
-        remoteAudiosRef.current.forEach(a => { try { if (a.parentNode) a.remove(); } catch (_) {} });
+        remoteAudiosRef.current.forEach(a => { try { if (a.parentNode) a.remove(); } catch (_) { } });
         remoteAudiosRef.current.clear();
         iceCandidateQueue.current.clear();
         setPeers([]);
@@ -128,7 +131,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 try {
                     audio.srcObject = null;
                     if (audio.parentNode) audio.remove();
-                } catch (_) {}
+                } catch (_) { }
             });
             remoteAudiosRef.current.clear();
             // Detener el stream local 
@@ -198,7 +201,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
     // Auto-dismiss del panel de strikes
     useEffect(() => {
         if (myStrikes === 0) return;
-        
+
         if (isBannedByStrikes) {
             if (strikeTimerRef.current) {
                 clearTimeout(strikeTimerRef.current);
@@ -212,7 +215,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
         strikeTimerRef.current = setTimeout(() => {
             setShowStrikePanel(false);
         }, 8000);
-        
+
         return () => {
             if (strikeTimerRef.current) {
                 clearTimeout(strikeTimerRef.current);
@@ -228,8 +231,14 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
     const addSystemMsg = (texto: string) => {
         setMessages(prev => [...prev, {
-            id: crypto.randomUUID(), username: '⚙️ Sistema',
-            texto, esMio: false, isSystem: true,
+            id: `system-${crypto.randomUUID()}`,
+            userId: 'system',
+            username: '⚙️ Sistema',
+            texto,
+            esMio: false,
+            isSystem: true,
+            source: 'CHAT',
+            timestamp: new Date().toISOString(),
         }]);
     };
 
@@ -291,14 +300,14 @@ export const VoiceChatPanel: React.FC<Props> = ({
                     setPeers(prev => prev.filter(id => id !== targetUserId));
                     const audio = remoteAudiosRef.current.get(targetUserId);
                     if (audio) {
-                        try { if (audio.parentNode) audio.remove(); } catch (_) {}
+                        try { if (audio.parentNode) audio.remove(); } catch (_) { }
                         remoteAudiosRef.current.delete(targetUserId);
                     }
                 }
             }
         };
 
-       
+
 
         pc.oniceconnectionstatechange = () => {
             console.log(`[ICE] Estado con ${targetUserId}:`, pc.iceConnectionState);
@@ -345,8 +354,8 @@ export const VoiceChatPanel: React.FC<Props> = ({
             if (!peerConnsRef.current.has(peerId)) {
                 if (isPlayer) {
                     getLocalStream()
-                    .then(() => createPeerConn(peerId, isInitiator))
-                    .catch(err => addSystemMsg(`🎤 Sin acceso al micrófono: ${err.message}`));
+                        .then(() => createPeerConn(peerId, isInitiator))
+                        .catch(err => addSystemMsg(`🎤 Sin acceso al micrófono: ${err.message}`));
                 } else {
                     createPeerConn(peerId, isInitiator);
                 }
@@ -416,16 +425,16 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 const prevType = peerPlayerTypesRef.current.get(item.userId);
                 const roleChanged = prevType !== undefined && prevType !== item.playerType;
                 peerPlayerTypesRef.current.set(item.userId, item.playerType);
-                
+
                 const existingPc = peerConnsRef.current.get(item.userId);
                 if (existingPc) {
                     const badState = ['disconnected', 'failed', 'closed'].includes(existingPc.connectionState);
                     if (!badState && !roleChanged) return;
-                    try { existingPc.close(); } catch (_) {}
+                    try { existingPc.close(); } catch (_) { }
                     peerConnsRef.current.delete(item.userId);
                     const staleAudio = remoteAudiosRef.current.get(item.userId);
                     if (staleAudio) {
-                        try { staleAudio.srcObject = null; staleAudio.remove(); } catch (_) {}
+                        try { staleAudio.srcObject = null; staleAudio.remove(); } catch (_) { }
                         remoteAudiosRef.current.delete(item.userId);
                     }
                     setPeers(prev => prev.filter(id => id !== item.userId));
@@ -456,10 +465,10 @@ export const VoiceChatPanel: React.FC<Props> = ({
             console.log('[VOICE] rtc-offer RECIBIDO de:', fromUserId);
             const existingPc = peerConnsRef.current.get(fromUserId);
             if (existingPc) {
-                try { existingPc.close(); } catch (_) {}
+                try { existingPc.close(); } catch (_) { }
                 peerConnsRef.current.delete(fromUserId);
                 const oldAudio = remoteAudiosRef.current.get(fromUserId);
-                if (oldAudio) { try { oldAudio.srcObject = null; if (oldAudio.parentNode) oldAudio.remove(); } catch (_) {} remoteAudiosRef.current.delete(fromUserId); }
+                if (oldAudio) { try { oldAudio.srcObject = null; if (oldAudio.parentNode) oldAudio.remove(); } catch (_) { } remoteAudiosRef.current.delete(fromUserId); }
                 setPeers(prev => prev.filter(id => id !== fromUserId));
                 iceCandidateQueue.current.delete(fromUserId);
             }
@@ -477,13 +486,13 @@ export const VoiceChatPanel: React.FC<Props> = ({
                         setPeers(prev => prev.filter(id => id !== fromUserId));
                         const audio = remoteAudiosRef.current.get(fromUserId);
                         if (audio) {
-                            try { if (audio.parentNode) audio.remove(); } catch (_) {}
+                            try { if (audio.parentNode) audio.remove(); } catch (_) { }
                             remoteAudiosRef.current.delete(fromUserId);
                         }
                     }
                 }
             };
-            
+
             pc.onicecandidate = ({ candidate }) => {
                 if (candidate) s.emit('rtc-ice-candidate', { toUserId: fromUserId, candidate });
             };
@@ -516,7 +525,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
             await pc.setRemoteDescription(new RTCSessionDescription(offer));
             const queuedOffer = iceCandidateQueue.current.get(fromUserId) ?? [];
             for (const c of queuedOffer) {
-                await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+                await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => { });
             }
             iceCandidateQueue.current.delete(fromUserId);
             const answer = await pc.createAnswer();
@@ -530,7 +539,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
             await pc.setRemoteDescription(new RTCSessionDescription(answer));
             const queuedAnswer = iceCandidateQueue.current.get(fromUserId) ?? [];
             for (const c of queuedAnswer) {
-                await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+                await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => { });
             }
             iceCandidateQueue.current.delete(fromUserId);
         };
@@ -545,17 +554,21 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 iceCandidateQueue.current.set(fromUserId, q);
                 return;
             }
-            await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
+            await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => { });
         };
 
         // Mensajes de chat
         const onMessage = (msg: any) => {
             const { filtrado } = filtrarTexto(msg.texto || '');
+
             setMessages(prev => [...prev, {
-                id: crypto.randomUUID(),
+                id: msg.id || msg._id || crypto.randomUUID(),
+                userId: msg.userId || '',
                 username: msg.username || 'Anon',
                 texto: filtrado,
                 esMio: msg.userId === userId,
+                source: msg.source || 'CHAT',
+                timestamp: msg.timestamp || new Date().toISOString(),
             }]);
         };
 
@@ -584,11 +597,11 @@ export const VoiceChatPanel: React.FC<Props> = ({
             }
         };
 
-const onPlayerBanned = ({ userId: bannedId }: { userId: string }) => {
-    if (bannedId !== userId) {
-        addSystemMsg('🚫 Un jugador fue expulsado por infracciones.');
-    }
-};
+        const onPlayerBanned = ({ userId: bannedId }: { userId: string }) => {
+            if (bannedId !== userId) {
+                addSystemMsg('🚫 Un jugador fue expulsado por infracciones.');
+            }
+        };
         const onConnect = () => {
             const pathParts = window.location.pathname.split('/');
             const fightIndex = pathParts.indexOf('fight');
@@ -676,9 +689,9 @@ const onPlayerBanned = ({ userId: bannedId }: { userId: string }) => {
             recognition.interimResults = false;
             recognition.onresult = (event: any) => {
                 const transcript = Array.from(event.results)
-                .map((r: any) => r[0].transcript)
-                .join(' ')
-                .trim();
+                    .map((r: any) => r[0].transcript)
+                    .join(' ')
+                    .trim();
                 if (!transcript) return;
                 socketRef.current?.emit('voice_transcript', {
                     userId,
@@ -687,18 +700,18 @@ const onPlayerBanned = ({ userId: bannedId }: { userId: string }) => {
 
                 });
             };
-            
+
             recognition.onerror = (event: any) => {
                 if (event.error !== 'aborted' && event.error !== 'no-speech') {
                     console.warn('[STT] Error:', event.error);
                 }
             };
-            
+
             recognitionRef.current = recognition;
-            try { recognition.start(); } catch (_) {}
-        }    
+            try { recognition.start(); } catch (_) { }
+        }
         setIsTalking(true);
-    }, [isMuted, isBanned, isBannedByStrikes, isPlayer, getLocalStream, socketRef, userId, username]);  
+    }, [isMuted, isBanned, isBannedByStrikes, isPlayer, getLocalStream, socketRef, userId, username]);
 
     const stopTalking = useCallback(() => {
         localStreamRef.current?.getAudioTracks().forEach(t => (t.enabled = false));
@@ -781,46 +794,47 @@ const onPlayerBanned = ({ userId: bannedId }: { userId: string }) => {
             </div>
             <div className="px-2 pb-2 space-y-1">
                 {listaUsuarios
-                .filter(u => u.userId !== userId)
-                .map(u => {
-                    const isConnected = peers.includes(u.userId);
-                    const isUserMuted = mutedUsers.has(u.userId);
-                    return (
-                        <div
-                            key={u.userId}
-                            className="flex items-center justify-between bg-white/5 px-2 py-1 rounded"
-                        >
-                            <div className="flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-400' : 'bg-white/20'}`} />
-                            <span className="text-[10px] text-white/70">
-                                {u.username || u.userId}
-                            </span>
-                            <span className="text-[8px] text-white/30">
-                                {u.playerType === 'PLAYER' ? '🎤' : '👁'}
-                            </span>
-                            </div>
-                            {u.playerType === 'PLAYER' && (
-                                <button
-                                onClick={() => {
-                                    setMutedUsers(prev => {
-                                        const next = new Set(prev);
-                                        const willMute = !next.has(u.userId);
-                                        if (willMute) next.add(u.userId);
-                                        else next.delete(u.userId);
-                                        const audio = remoteAudiosRef.current.get(u.userId);
-                                        if (audio) audio.muted = willMute || deafened;
-                                        return next;
-                                    });
-                                }}
-                                className="text-[10px] px-2 py-1 rounded bg-orange-600 text-white"
+                    .filter(u => u.userId !== userId)
+                    .map(u => {
+                        const isConnected = peers.includes(u.userId);
+                        const isUserMuted = mutedUsers.has(u.userId);
+                        return (
+                            <div
+                                key={u.userId}
+                                className="flex items-center justify-between bg-white/5 px-2 py-1 rounded"
                             >
-                                {isUserMuted ? 'Escuchar' : 'Silenciar'}
-                                </button>
-                            )}
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-400' : 'bg-white/20'}`} />
+                                    <span className="text-[10px] text-white/70">
+                                        {u.username || u.userId}
+                                    </span>
+                                    <span className="text-[8px] text-white/30">
+                                        {u.playerType === 'PLAYER' ? '🎤' : '👁'}
+                                    </span>
+                                </div>
+                                {u.playerType === 'PLAYER' && (
+                                    <button
+                                        onClick={() => {
+                                            setMutedUsers(prev => {
+                                                const next = new Set(prev);
+                                                const willMute = !next.has(u.userId);
+                                                if (willMute) next.add(u.userId);
+                                                else next.delete(u.userId);
+                                                const audio = remoteAudiosRef.current.get(u.userId);
+                                                if (audio) audio.muted = willMute || deafened;
+                                                return next;
+                                            });
+                                        }}
+                                        className="text-[10px] px-2 py-1 rounded bg-orange-600 text-white"
+                                    >
+                                        {isUserMuted ? 'Escuchar' : 'Silenciar'}
+                                    </button>
+                                )}
                             </div>
-                            );})
-                        }
-                        </div>
+                        );
+                    })
+                }
+            </div>
 
             {isPlayer && opponent && (
                 <button
@@ -841,33 +855,33 @@ const onPlayerBanned = ({ userId: bannedId }: { userId: string }) => {
                         : 'bg-orange-950/30 border-orange-500/20'
                     }
                 `}>
-                <div className="flex items-center gap-1.5">
-                    {[1, 2, 3].map((n) => (
-                        <div
-                            key={n}
-                            className={`
+                    <div className="flex items-center gap-1.5">
+                        {[1, 2, 3].map((n) => (
+                            <div
+                                key={n}
+                                className={`
                                 w-2.5 h-2.5 rounded-full transition-all duration-300
                                 ${n <= myStrikes
-                                    ? isBannedByStrikes
-                                    ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
-                                    : 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)]'
-                                    : 'bg-white/10 border border-white/20'
-                                }
+                                        ? isBannedByStrikes
+                                            ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                                            : 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)]'
+                                        : 'bg-white/10 border border-white/20'
+                                    }
                             `}
-                        />
-                    ))}
-                    <span className={`
+                            />
+                        ))}
+                        <span className={`
                         text-[9px] font-black uppercase tracking-wider ml-1
                         ${isBannedByStrikes ? 'text-red-400' : 'text-orange-400'}
                     `}>
-                        {isBannedByStrikes ? 'Mic bloqueado' : `Strike ${myStrikes}/3`}
-                    </span>
-                </div>
-                {!isBannedByStrikes && (
-                    <span className="text-[8px] text-white/30 font-medium">
-                        {3 - myStrikes} restante{3 - myStrikes !== 1 ? 's' : ''}
-                    </span>
-                )}
+                            {isBannedByStrikes ? 'Mic bloqueado' : `Strike ${myStrikes}/3`}
+                        </span>
+                    </div>
+                    {!isBannedByStrikes && (
+                        <span className="text-[8px] text-white/30 font-medium">
+                            {3 - myStrikes} restante{3 - myStrikes !== 1 ? 's' : ''}
+                        </span>
+                    )}
                 </div>
             )}
 
