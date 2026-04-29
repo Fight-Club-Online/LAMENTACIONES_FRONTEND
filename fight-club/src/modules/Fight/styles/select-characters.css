@@ -1,0 +1,64 @@
+
+.sprite-select {
+  width: 56px;
+  height: 64px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 560px 64px;
+  image-rendering: pixelated;
+  transform: scale(6) translateY(-8px);
+  transform-origin: center center;
+  animation: spriteSelectIdle 0.6s steps(10, end) infinite;
+}
+
+.sprite-select-idle {
+  animation: spriteSelectIdle 0.6s steps(10, end) infinite;
+}
+
+.sprite-select-run {
+  animation: spriteSelectRun 0.6s steps(10, end) infinite;
+}
+
+.sprite-select-attack {
+  animation: spriteSelectAttack 0.6s steps(6, end) infinite;
+}
+
+.sprite-select-hurt {
+  animation: spriteSelectHurt 0.6s steps(4, end) infinite;
+}
+
+@keyframes spriteSelectIdle {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -560px 0;
+  }
+}
+
+@keyframes spriteSelectRun {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -560px 0;
+  }
+}
+
+@keyframes spriteSelectAttack {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -336px 0;
+  }
+}
+
+@keyframes spriteSelectHurt {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -224px 0;
+  }
+}

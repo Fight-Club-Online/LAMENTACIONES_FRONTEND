@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import type { Fight } from '../types/fight';
 import type { Character, UserCharacter } from '../../Lobby/Types/characterTypes';
+import type { CharacterAssets } from '../../Lobby/Config/axiosLobby';
 import { lobbyApi } from '../../Lobby/Config/axiosLobby';
 import { FooterSelectCharacter } from '../Components/SelectCharacter/footerSC';
 import { HeaderSelectCharacter } from '../Components/SelectCharacter/headerSC';
+import '../styles/select-characters.css';
+
+const AZURE_BACKEND_URL = 'https://lobbyservices-f7dghrebachxetg4.mexicocentral-01.azurewebsites.net';
+
+const fixAssetUrl = (url: string | undefined): string | undefined => {
+    if (url && url.includes('localhost:8080')) {
+        return url.replace('http://localhost:8080', AZURE_BACKEND_URL);
+    }
+    return url;
+};
 
 interface SelectCharactersProps {
     gameState: Fight;
@@ -29,6 +40,28 @@ interface SelectCharactersProps {
 
 
 
+// Helper para normalizar estructura de personajes desde el API
+const normalizeCharacter = (char: any): UserCharacter => {
+    // Si viene con estructura anidada, devolverla como está
+    if (char.character) {
+        return char;
+    }
+    // Si viene con datos planos, envolver en estructura UserCharacter
+    return {
+        id: char.id || "uc-temp",
+        user: char.user || "",
+        character: {
+            characterId: char.characterId,
+            characterLevel: char.characterLevel,
+            characterName: char.characterName,
+            characterHp: char.characterHp,
+            characterATK: char.characterATK,
+            characterDEF: char.characterDEF,
+            characterImg: char.characterImg,
+        }
+    };
+};
+
 export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     gameState,
     userId,
@@ -39,6 +72,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     const [characters, setCharacters] = useState<UserCharacter[]>([]);
     const [isLoadingCharacters, setIsLoadingCharacters] = useState(true);
     const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
+    const [characterAssets, setCharacterAssets] = useState<Map<number, CharacterAssets>>(new Map());
 
     // Determinar si este usuario es player1 o player2
     const isPlayer1 = gameState.player1.userId === userId;
@@ -50,35 +84,42 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     const bothPlayersReady = gameState.player1.hasCharacter && gameState.player2.hasCharacter;
     const currentPlayerReady = currentPlayer.hasCharacter;
 
-    // Cargar personajes disponibles
+    // Cargar personajes disponibles y sus assets
     useEffect(() => {
         const loadCharacters = async () => {
             try {
                 setIsLoadingCharacters(true);
                 const response = await lobbyApi.getUserCharacters(userId);
-                console.log("el try:",response)
-                if(response.length === 0){
-                    const response = await lobbyApi.getAllCharacters();
-                    var c: Character =  response[0];
-                    let uC : UserCharacter = {
-                        id : "1",
-                        user: userId,
-                        character: c
+                console.log("Personajes cargados:", response)
+                if(response && response.length > 0){
+                    const normalizedCharacters = response.map(normalizeCharacter);
+                    setCharacters(normalizedCharacters);
+                    
+                    // Cargar assets para cada personaje
+                    const assetsMap = new Map<number, CharacterAssets>();
+                    for (const char of normalizedCharacters) {
+                        try {
+                            const charId = char.character.characterId;
+                            const assets = await lobbyApi.getUserCharacterAssets(userId, charId.toString());
+                            const fixedAssets: CharacterAssets = {
+                                idle_url: fixAssetUrl(assets.idle_url),
+                                run_url: fixAssetUrl(assets.run_url),
+                                attack_url: fixAssetUrl(assets.attack_url),
+                                hurt_url: fixAssetUrl(assets.hurt_url)
+                            };
+                            assetsMap.set(charId, fixedAssets);
+                        } catch (error) {
+                            console.error(`Error cargando assets para ${char.character.characterName}:`, error);
+                        }
                     }
-                    setCharacters([defaultCharacter]);        
+                    setCharacterAssets(assetsMap);
                  }else{
+                    console.log('No hay personajes del usuario, usando default');
                     setCharacters([defaultCharacter]);
                  }
             } catch (error) {
                 console.error('Error cargando personajes:', error);
-                const response = await lobbyApi.getAllCharacters();
-                console.log(response)
-                var c: Character =  response[0];
-                let uC : UserCharacter = {
-                    id : "1",
-                    user: userId,
-                    character: c
-                }
+                console.log('Usando personaje por defecto');
                 setCharacters([defaultCharacter]);
             } finally {
                 setIsLoadingCharacters(false);
@@ -145,13 +186,14 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                         ${currentPlayerReady ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
-                                    {/* Imagen del personaje */}
+                                    {/* Sprite del personaje */}
                                     <div className="aspect-square bg-zinc-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                                        {char.character.characterImg ? (
-                                            <img 
-                                                src={char.character.characterImg} 
-                                                alt={char.character.characterName}
-                                                className="w-full h-full object-cover"
+                                        {characterAssets.get(char.character.characterId)?.idle_url ? (
+                                            <div
+                                                className="sprite-select sprite-select-idle"
+                                                style={{
+                                                    backgroundImage: `url(${characterAssets.get(char.character.characterId)?.idle_url})`
+                                                }}
                                             />
                                         ) : (
                                             <span className="text-4xl text-zinc-600">?</span>
