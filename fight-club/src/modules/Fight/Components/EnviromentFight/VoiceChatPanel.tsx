@@ -682,22 +682,25 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
         // Transcripción para moderación de voz 
         const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognitionAPI && !isBannedByStrikes) {
+        if (!SpeechRecognitionAPI) {
+            console.warn('[STT] SpeechRecognition no disponible en este dispositivo/navegador');
+        } else if (!isBannedByStrikes) {
             const recognition = new SpeechRecognitionAPI();
             recognition.lang = 'es-ES';
             recognition.continuous = true;
-            recognition.interimResults = false;
+            recognition.interimResults = true;
             recognition.onresult = (event: any) => {
-                const transcript = Array.from(event.results)
-                    .map((r: any) => r[0].transcript)
-                    .join(' ')
-                    .trim();
-                if (!transcript) return;
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    }
+                }
+                if (!finalTranscript.trim()) return;
                 socketRef.current?.emit('voice_transcript', {
                     userId,
                     username,
-                    texto: transcript,
-
+                    texto: finalTranscript.trim(),
                 });
             };
 
@@ -715,9 +718,12 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
     const stopTalking = useCallback(() => {
         localStreamRef.current?.getAudioTracks().forEach(t => (t.enabled = false));
-        recognitionRef.current?.stop();
-        recognitionRef.current = null;
         setIsTalking(false);
+        const rec = recognitionRef.current;
+        recognitionRef.current = null;
+        setTimeout(() => {
+            try { rec?.stop(); } catch (_) {}
+        }, 600);
     }, []);
 
     const toggleMute = () => {
