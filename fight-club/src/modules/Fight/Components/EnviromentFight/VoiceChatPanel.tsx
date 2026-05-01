@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react';
+import '../../styles/voicechat.css';
 
 interface Message {
     id: string;
@@ -72,14 +73,18 @@ const PALABRAS_BANEADAS = [
 ];
 
 function filtrarTexto(texto: string): { filtrado: string; huboInfraccion: boolean } {
-    let filtrado = texto;
+    const textoNorm = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let filtradoNorm = textoNorm;
     let huboInfraccion = false;
     PALABRAS_BANEADAS.forEach(p => {
-        const regex = new RegExp(`\\b${p}\\b`, 'gi');
-        if (regex.test(filtrado)) { huboInfraccion = true; }
-        filtrado = filtrado.replace(regex, '****');
+    const pNorm = p.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const regex = new RegExp(`\\b${pNorm}\\b`, 'gi');
+        if (regex.test(filtradoNorm)) {
+            huboInfraccion = true;
+        }
+        filtradoNorm = filtradoNorm.replace(regex, '****');
     });
-    return { filtrado, huboInfraccion };
+    return { filtrado: filtradoNorm, huboInfraccion };
 }
 
 export const VoiceChatPanel: React.FC<Props> = ({
@@ -88,10 +93,15 @@ export const VoiceChatPanel: React.FC<Props> = ({
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isTalking, setIsTalking] = useState(false);
+    const [micToggled, setMicToggled] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [deafened, setDeafened] = useState(false);
+    const deafenedRef = useRef(false);
+    useEffect(() => { deafenedRef.current = deafened; }, [deafened]);
     const [chatActive, setChatActive] = useState(false);
     const [isBanned, setIsBanned] = useState(false);
+    const [isChatBanned, setIsChatBanned] = useState(false);
+    const [myChatStrikes, setMyChatStrikes] = useState(0);
     const [myStrikes, setMyStrikes] = useState<number>(0);
     const [isBannedByStrikes, setIsBannedByStrikes] = useState(false);
     const recognitionRef = useRef<any>(null);
@@ -228,6 +238,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+    
 
     const addSystemMsg = (texto: string) => {
         setMessages(prev => [...prev, {
@@ -282,7 +293,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 remoteAudiosRef.current.set(targetUserId, audio);
             }
             audio.srcObject = stream;
-            audio.muted = deafened || mutedUsersRef.current.has(targetUserId)
+            audio.muted = deafenedRef.current || mutedUsersRef.current.has(targetUserId)
             audio.play().catch(e => {
                 if (e.name !== 'AbortError') console.error('[AUDIO] Autoplay bloqueado:', e);
             });
@@ -347,7 +358,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
         }
 
         return pc;
-    }, [socketRef, deafened, getLocalStream, isPlayer]);
+    }, [socketRef, getLocalStream, isPlayer]);
 
     const tryConnectPendingPeers = useCallback(() => {
         pendingPeersRef.current.forEach(({ userId: peerId, isInitiator }) => {
@@ -450,12 +461,12 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
                 console.log(`[VOICE] Conectando con ${item.userId} [${item.playerType}] | soyIniciador: ${isInitiator}`);
 
-                if (chatActiveRef.current) {
+                if (!pendingPeersRef.current.find(p => p.userId === item.userId)) {
+                    pendingPeersRef.current.push({ userId: item.userId, isInitiator });
+                }
+                
+                if (chatActiveRef.current && item.playerType !== 'PLAYER') {
                     createPeerConn(item.userId, isInitiator);
-                } else {
-                    if (!pendingPeersRef.current.find(p => p.userId === item.userId)) {
-                        pendingPeersRef.current.push({ userId: item.userId, isInitiator });
-                    }
                 }
             });
         };
@@ -507,7 +518,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                     remoteAudiosRef.current.set(fromUserId, audio);
                 }
                 audio.srcObject = streams[0];
-                audio.muted = deafened || mutedUsersRef.current.has(fromUserId);
+                audio.muted = deafenedRef.current || mutedUsersRef.current.has(fromUserId);
                 audio.play().catch(e => {
                     if (e.name !== 'AbortError') console.error('[AUDIO] Error autoplay:', e);
                 });
@@ -580,20 +591,26 @@ export const VoiceChatPanel: React.FC<Props> = ({
             if (targetSocketId === s.id) {
                 setIsBanned(true);
                 setIsMuted(true);
+                setMicToggled(false);
                 localStreamRef.current?.getAudioTracks().forEach(t => t.enabled = false);
                 addSystemMsg('🚫 Tu micrófono ha sido bloqueado por un moderador.');
             }
         };
 
         const onNotificacion = (msg: string) => addSystemMsg(msg);
-        const onPlayerStrike = ({ count, max }: { count: number; max: number }) => {
-            setMyStrikes(count);
-            if (count >= max) {
-                setIsBannedByStrikes(true);
-                setIsBanned(true);
-                localStreamRef.current?.getAudioTracks().forEach(t => (t.enabled = false));
-                recognitionRef.current?.stop();
-                recognitionRef.current = null;
+        const onPlayerStrike = ({ count, max, source }: { count: number; max: number; source?: string }) => {
+            if (source === 'CHAT') {
+                setMyChatStrikes(count);
+                if (count >= max) setIsChatBanned(true);
+            } else {
+                setMyStrikes(count);
+                if (count >= max) {
+                    setIsBannedByStrikes(true);
+                    setIsBanned(true);
+                    localStreamRef.current?.getAudioTracks().forEach(t => (t.enabled = false));
+                    recognitionRef.current?.stop();
+                    recognitionRef.current = null;
+                }
             }
         };
 
@@ -638,8 +655,15 @@ export const VoiceChatPanel: React.FC<Props> = ({
         s.on('player_strike', onPlayerStrike);
         s.on('player_banned', onPlayerBanned);
 
+        const onPeersReady = ({ players }: { players: string[] }) => {
+            console.log('[VOICE] peers_ready recibido:', players);
+            tryConnectPendingPeers();
+        };
+        s.on('peers_ready', onPeersReady);
+
         return () => {
             s.off('estado_chat', onEstado);
+            s.off('peers_ready', onPeersReady);
             s.off('listaSockets', onListaSockets);
             s.off('rtc-offer', onOffer);
             s.off('rtc-answer', onAnswer);
@@ -653,7 +677,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
             s.off('connect', onConnect);
             s.off('identificado', onIdentificado);
         };
-    }, [userId, isPlayer, deafened, createPeerConn, getLocalStream, cleanupAllConnections, tryConnectPendingPeers]);
+    }, [userId, isPlayer, createPeerConn, getLocalStream, cleanupAllConnections, tryConnectPendingPeers]);
 
     // ── PTT ───────────────────────────────────────────────────────
     const startTalking = useCallback(async () => {
@@ -687,8 +711,14 @@ export const VoiceChatPanel: React.FC<Props> = ({
         } else if (!isBannedByStrikes) {
             const recognition = new SpeechRecognitionAPI();
             recognition.lang = 'es-ES';
-            recognition.continuous = true;
-            recognition.interimResults = true;
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            recognition.continuous = !isMobile;
+            recognition.interimResults = !isMobile;
+            recognition.onend = () => {
+                if (recognitionRef.current === recognition) {
+                    try { recognition.start(); } catch (_) {}
+                }
+            };
             recognition.onresult = (event: any) => {
                 let finalTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -703,9 +733,23 @@ export const VoiceChatPanel: React.FC<Props> = ({
                     texto: finalTranscript.trim(),
                 });
             };
-
+            
             recognition.onerror = (event: any) => {
-                if (event.error !== 'aborted' && event.error !== 'no-speech') {
+                if (event.error === 'network') {
+                    if (recognitionRef.current === recognition) {
+                        recognition._networkRetries = (recognition._networkRetries || 0) + 1;
+                        if (recognition._networkRetries <= 3) {
+                            setTimeout(() => {
+                                try { recognition.start(); } catch (_) {}
+                            }, 1500 * recognition._networkRetries);
+                        } else {
+                            console.warn('[STT] Sin red, deteniendo reconocimiento');
+                            recognitionRef.current = null;
+                        }
+                    }
+                    return;
+                }
+                if (!['aborted', 'no-speech'].includes(event.error)) {
                     console.warn('[STT] Error:', event.error);
                 }
             };
@@ -725,6 +769,30 @@ export const VoiceChatPanel: React.FC<Props> = ({
             try { rec?.stop(); } catch (_) {}
         }, 600);
     }, []);
+
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() !== 'b') return;
+            const active = document.activeElement;
+            if (
+                active instanceof HTMLInputElement ||
+                active instanceof HTMLTextAreaElement ||
+                (active as HTMLElement)?.isContentEditable
+            ) return;
+            if (isBanned || isMuted || !isPlayer) return;
+
+            if (micToggled) {
+                stopTalking();
+                setMicToggled(false);
+            } else {
+                startTalking();
+                setMicToggled(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [micToggled, isBanned, isMuted, isPlayer, startTalking, stopTalking]);
 
     const toggleMute = () => {
         if (isBanned) return;
@@ -757,7 +825,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
 
     const sendMessage = () => {
         const s = socketRef.current;
-        if (!s || !input.trim() || !chatActive || !isPlayer) return;
+        if (!s || !input.trim() || !chatActive || !isPlayer || isChatBanned) return;
         const { filtrado, huboInfraccion } = filtrarTexto(input.trim());
         s.emit('chat message', { userId, username, texto: input.trim() })
         if (huboInfraccion) addSystemMsg('⚠️ Mensaje filtrado por lenguaje inapropiado.');
@@ -831,7 +899,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                                                 return next;
                                             });
                                         }}
-                                        className="text-[10px] px-2 py-1 rounded bg-orange-600 text-white"
+                                        className="text-[10px] px-2 py-1 rounded bg-orange-600/80 hover:bg-orange-500 text-white border border-orange-400/20 transition-all active:scale-95 font-bold tracking-wide"
                                     >
                                         {isUserMuted ? 'Escuchar' : 'Silenciar'}
                                     </button>
@@ -846,7 +914,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 <button
                     onClick={reportOpponent}
                     title={`Reportar a ${opponent.username}`}
-                    className="px-2 py-1 rounded-md text-[9px] bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-all"
+                    className="mx-2 mb-1 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-red-500/10 text-red-400/80 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/15 hover:border-red-500/30 w-[calc(100%-1rem)]"
                 >
                     🚨 {opponent.username}
                 </button>
@@ -855,10 +923,10 @@ export const VoiceChatPanel: React.FC<Props> = ({
             {/* ── Strikes del jugador actual ── */}
             {showStrikePanel && (
                 <div className={`
-                    mx-2 mt-1 px-3 py-2 rounded-lg border flex items-center justify-between
+                    mx-2 mt-1 px-3 py-2 rounded-lg border flex items-center justify-between backdrop-blur-sm
                     ${isBannedByStrikes
-                        ? 'bg-red-950/40 border-red-500/30'
-                        : 'bg-orange-950/30 border-orange-500/20'
+                        ? 'bg-gradient-to-r from-red-950/60 via-red-900/20 to-red-950/60 border-red-500/40 shadow-[0_0_12px_rgba(220,38,38,0.2)]'
+                        : 'bg-gradient-to-r from-orange-950/50 via-orange-900/20 to-orange-950/50 border-orange-500/30 shadow-[0_0_8px_rgba(249,115,22,0.15)]'
                     }
                 `}>
                     <div className="flex items-center gap-1.5">
@@ -891,9 +959,28 @@ export const VoiceChatPanel: React.FC<Props> = ({
                 </div>
             )}
 
+            {myChatStrikes > 0 && (
+                <div className={`
+                    mx-2 mt-1 px-3 py-2 rounded-lg border flex items-center justify-between backdrop-blur-sm
+                    ${isChatBanned
+                        ? 'bg-gradient-to-r from-red-950/60 via-red-900/20 to-red-950/60 border-red-500/40 shadow-[0_0_12px_rgba(220,38,38,0.2)]'
+                        : 'bg-gradient-to-r from-orange-950/50 via-orange-900/20 to-orange-950/50 border-orange-500/30 shadow-[0_0_8px_rgba(249,115,22,0.15)]'
+                    }
+                `}>
+                    <div className="flex items-center gap-1.5">
+                        {[1, 2, 3].map(n => (
+                            <div key={n} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${n <= myChatStrikes ? isChatBanned ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]' : 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-white/10 border border-white/20'}`} />
+                            ))}
+                            <span className={`text-[9px] font-black uppercase tracking-wider ml-1 ${isChatBanned ? 'text-red-400' : 'text-orange-400'}`}>
+                                {isChatBanned ? 'Chat bloqueado' : `Chat Strike ${myChatStrikes}/3`}
+                                </span>
+                    </div>
+                </div>
+            )}
+
 
             {/* ── Mensajes ── */}
-            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 min-h-0">
+            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 min-h-0 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-orange-600/40 hover:scrollbar-thumb-orange-500/60">
                 {messages.length === 0 && (
                     <p className="text-center text-[9px] text-white/10 mt-8 uppercase tracking-widest leading-relaxed">
                         {chatActive ? 'Sin mensajes aún...' : 'Esperando inicio\nde la partida'}
@@ -927,30 +1014,35 @@ export const VoiceChatPanel: React.FC<Props> = ({
             {isPlayer && (
                 <div className="px-2 py-1.5 border-t border-white/5">
                     {isBanned ? (
-                        <div className="w-full py-2 text-center text-[9px] text-red-400 font-black uppercase tracking-wider bg-red-900/10 rounded-lg border border-red-500/10">
-                            🚫 Micrófono bloqueado
+                        <div className="w-full py-2.5 text-center text-[10px] text-red-300 font-black uppercase tracking-[0.3em] rounded-lg border border-red-500/40 bg-gradient-to-r from-red-950/60 via-red-900/30 to-red-950/60 shadow-[inset_0_0_20px_rgba(220,38,38,0.15)] animate-pulse">
+                            ⛔ Micrófono bloqueado
                         </div>
                     ) : (
                         <button
-                            onMouseDown={startTalking}
-                            onMouseUp={stopTalking}
-                            onMouseLeave={stopTalking}
-                            onTouchStart={e => { e.preventDefault(); startTalking(); }}
-                            onTouchEnd={e => { e.preventDefault(); stopTalking(); }}
-                            disabled={isMuted}
-                            className={`
-                                w-full flex items-center justify-center gap-1.5 py-2 rounded-lg
-                                text-[9px] font-black uppercase tracking-wider transition-all
-                                ${isTalking
-                                    ? 'bg-red-600 text-white shadow-[0_0_16px_rgba(220,38,38,0.4)]'
-                                    : 'bg-white/4 text-white/25 hover:bg-white/8 hover:text-white/50 border border-white/5'
-                                }
-                                disabled:opacity-20 disabled:cursor-not-allowed
+                        onClick={() => {
+                            if (micToggled) {
+                                stopTalking();
+                                setMicToggled(false);
+                            } else {
+                                startTalking();
+                                setMicToggled(true);
+                            }
+                        }}
+                        disabled={isMuted}
+                        className={`
+                            w-full flex items-center justify-center gap-1.5 py-2 rounded-lg
+                            text-[9px] font-black uppercase tracking-wider transition-all
+                            ${micToggled
+                                ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] border border-red-400/30 animate-pulse'
+                                : 'bg-white/4 text-white/25 hover:bg-white/8 hover:text-white/50 border border-white/5'
+                            }
+                            disabled:opacity-20 disabled:cursor-not-allowed
                             `}
-                        >
-                            <Mic size={10} />
-                            {isTalking ? 'Hablando...' : 'Mantener — Hablar'}
+                            >
+                                 <Mic size={10} />
+                            {micToggled ? 'Mic ON — Click para apagar' : 'Click — Activar Mic'}
                         </button>
+
                     )}
                 </div>
             )}
@@ -962,7 +1054,7 @@ export const VoiceChatPanel: React.FC<Props> = ({
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        disabled={false}
+                        disabled={isChatBanned || !chatActive}
                         maxLength={200}
                         placeholder="Mensaje..."
                         className="

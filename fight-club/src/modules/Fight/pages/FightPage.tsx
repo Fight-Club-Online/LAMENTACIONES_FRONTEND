@@ -66,14 +66,28 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
 
     // Emitir PLAYER o SPECTATOR según el rol actual
     const hasEmittedPlayerRole = useRef(false);
-    
+    const prevRoleRef = useRef<boolean | null>(null);
+
     useEffect(() => {
         const s = voiceSocketRef.current;
         if (!s || !fightId) return;
+        if (prevRoleRef.current === null) {
+            prevRoleRef.current = isPlayerInFight;
+            if (isPlayerInFight) hasEmittedPlayerRole.current = true;
+            return;
+        }
+        if (prevRoleRef.current === isPlayerInFight) return;
+        prevRoleRef.current = isPlayerInFight;
         if (!isPlayerInFight && !hasEmittedPlayerRole.current) return;
-        if (isPlayerInFight) {hasEmittedPlayerRole.current = true;}  
-        s.emit('join_fight', { fightId, userId, username: userData?.username ?? null, playerType: isPlayerInFight ? 'PLAYER' : 'SPECTATOR'});
-        console.log(`[VOICE] Rol actualizado a ${isPlayerInFight ? 'PLAYER' : 'SPECTATOR'}`);
+        if (isPlayerInFight) hasEmittedPlayerRole.current = true;
+
+        s.emit('join_fight', {
+            fightId,
+            userId,
+            username: userData?.username ?? null,
+            playerType: isPlayerInFight ? 'PLAYER' : 'SPECTATOR'
+        });
+        console.log(`[VOICE] Rol cambiado a ${isPlayerInFight ? 'PLAYER' : 'SPECTATOR'}`);
     }, [isPlayerInFight, fightId, userId, userData?.username]);
 
     useKeyboardControls(sendAction, !!gameState?.active);
@@ -226,6 +240,7 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
                     <span className="px-2 py-1 border border-white/5 rounded">WASD: Mover</span>
                     <span className="px-2 py-1 border border-white/5 rounded">J: Ataque</span>
                     <span className="px-2 py-1 border border-white/5 rounded">K: Especial</span>
+                    <span className="px-2 py-1 border border-white/5 rounded">B: Voz</span>
                 </div>
 
                 {/* Mobile Controls */}
