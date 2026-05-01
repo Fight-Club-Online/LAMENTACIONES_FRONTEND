@@ -76,4 +76,22 @@ export const lobbyApi ={
         return res.data;
     },
 
+    createPublicRoom: async(hostId:string): Promise<Room>=>{
+        const res = await lobbyApiAxios.post(`${base_rest_uri}/create-public`,null,{
+            params: { hostId }
+        }).catch((error)=>{
+            throw new Error(error.response.data.message)
+        });
+        return res.data
+    },
+
+    getPublicRooms: async(): Promise<Room[]>=>{
+        const res = await lobbyApiAxios.get(`${base_rest_uri}/public-rooms`)
+        .catch((error)=>{
+            throw new Error(error.response.data.message)
+        });
+        return res.data
+    },
+
+
 }  
