@@ -9,6 +9,8 @@ interface Props {
     gameState: Fight | null;
     userId: string;
     pointsChange?: number;
+    player1Username?: string;
+    player2Username?: string;
 }
 
 const REDIRECT_SECONDS = 10;
@@ -102,11 +104,14 @@ function hpColor(pct: number) {
     return '#dc2626';
 }
 
-export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId, pointsChange }) => {
+export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId, pointsChange, player1Username, player2Username }) => {
     const navigate    = useNavigate();
     const [cd, setCd] = useState(REDIRECT_SECONDS);
     const cfg         = RESULT_CONFIG[result];
     const canvasRef   = useParticles(cfg.particle);
+
+    const p1DisplayName = player1Username ?? gameState?.player1.characterName ?? 'P1';
+    const p2DisplayName = player2Username ?? gameState?.player2.characterName ?? 'P2';
 
     const isPlayer1 = gameState?.player1.userId === userId;
     const myFighter = isPlayer1 ? gameState?.player1 : gameState?.player2;
@@ -176,10 +181,10 @@ export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId, 
                             className="w-14 h-14 rounded-full flex items-center justify-center font-black text-lg border-2"
                             style={p1Style}
                         >
-                            {initials(gameState?.player1.characterName)}
+                            {initials(p1DisplayName)}
                         </div>
                         <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: p1Style.color }}>
-                            {gameState?.player1.characterName ?? 'P1'}
+                            {p1DisplayName}
                         </span>
                     </div>
 
@@ -190,10 +195,10 @@ export const FightResultScreen: React.FC<Props> = ({ result, gameState, userId, 
                             className="w-14 h-14 rounded-full flex items-center justify-center font-black text-lg border-2"
                             style={p2Style}
                         >
-                            {initials(gameState?.player2.characterName)}
+                            {initials(p2DisplayName)}
                         </div>
                         <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: p2Style.color }}>
-                            {gameState?.player2.characterName ?? 'P2'}
+                            {p2DisplayName}
                         </span>
                     </div>
                 </div>

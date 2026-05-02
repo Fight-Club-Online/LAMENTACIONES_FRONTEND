@@ -1,6 +1,7 @@
 import { Sword, Trophy, Skull } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import authApi from '../../../authentication/Config/axios';
 
 interface FightRecord {
     id: string;
@@ -25,6 +26,7 @@ const timeAgo = (dateStr: string) => {
 export const HistoryPanel = () => {
     const [history, setHistory] = useState<FightRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const [opponentNames, setOpponentNames] = useState<Record<string, string>>({});
 
 useEffect(() => {
     const userData = localStorage.getItem('user_data');
@@ -32,10 +34,22 @@ useEffect(() => {
     const { userId } = JSON.parse(userData);
     const FIGHT_API = import.meta.env.VITE_API_FIGHT_URL || 'https://fightclubservice-b4bye5fxhec7hzhn.mexicocentral-01.azurewebsites.net';
     axios.get(`${FIGHT_API}/fight/history/${userId}`)
-     .then(res => setHistory(res.data))
-     .catch(() => setHistory([]))
-     .finally(() => setLoading(false));
-}, []);
+    .then(async res => {
+        const records = res.data;
+        setHistory(records);
+        const uniqueIds: string[] = [...new Set<string>(records.map((f: any) => f.opponentId).filter(Boolean))];
+        const names: Record<string, string> = {};
+        await Promise.all(
+            uniqueIds.map(id =>
+                authApi.get(`/user-profile/${id}`)
+                .then(r => { if (r.data?.username) names[id] = r.data.username; })
+                .catch(() => {})
+            ));
+         setOpponentNames(names);
+        })
+        .catch(() => setHistory([]))
+        .finally(() => setLoading(false));
+    }, []);
 
     return (
         <div className="bg-[#161616] border border-white/5 rounded-2xl p-6 h-full flex flex-col shadow-2xl relative overflow-hidden group">
@@ -67,7 +81,7 @@ useEffect(() => {
                         </div>
                         <div className="flex-1">
                             <p className="text-sm font-black italic text-white uppercase tracking-tighter group-hover:text-orange-500 transition-colors">
-                                vs {fight.opponentName || fight.opponentId}
+                                vs {opponentNames[fight.opponentId] || fight.opponentName || fight.opponentId}
                             </p>
                             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
                                 {timeAgo(fight.fightDate)}

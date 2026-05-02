@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { getUserData } from '../../Lobby/Types/localUserData';
 import { useFightWebsocket } from '../Hooks/useFightWebsocket';
@@ -10,6 +10,7 @@ import backgroundImage from '../../../assets/Background.jpeg';
 import { FightResultScreen } from '../Components/EnviromentFight/FightResultScreen';
 import { useVoiceChat } from '../Hooks/useVoiceChat';
 import { VoiceChatPanel } from '../Components/EnviromentFight/VoiceChatPanel';
+import authApi from '../../authentication/Config/axios';
 
 
 type FightPageInnerProps = {
@@ -23,6 +24,9 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     const navPlayerType = (location.state as any)?.playerType as string | undefined;
     const fightResultRef = useRef<'WIN' | 'LOSE' | 'DRAW' | null>(null)
     const [showChat, setShowChat] = React.useState(true);
+    const [player1Username, setPlayer1Username] = useState<string | undefined>(undefined);
+    const [player2Username, setPlayer2Username] = useState<string | undefined>(undefined);
+    const fetchedIdsRef = useRef<Set<string>>(new Set());
 
 
     const { 
@@ -91,6 +95,34 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
     }, [isPlayerInFight, fightId, userId, userData?.username]);
 
     useKeyboardControls(sendAction, !!gameState?.active);
+
+    useEffect(() => {
+        if (!gameState) return;
+        const p1Id = gameState.player1.userId;
+        const p2Id = gameState.player2.userId;
+
+        if (p1Id && !fetchedIdsRef.current.has(p1Id)) {
+            fetchedIdsRef.current.add(p1Id);
+            if (p1Id === userId && userData?.username) {
+                setPlayer1Username(userData.username);
+            } else {
+                authApi.get(`/user-profile/${p1Id}`)
+                    .then(res => { if (res.data?.username) setPlayer1Username(res.data.username); })
+                    .catch(() => {});
+            }
+        }
+
+        if (p2Id && !fetchedIdsRef.current.has(p2Id)) {
+            fetchedIdsRef.current.add(p2Id);
+            if (p2Id === userId && userData?.username) {
+                setPlayer2Username(userData.username);
+            } else {
+                authApi.get(`/user-profile/${p2Id}`)
+                    .then(res => { if (res.data?.username) setPlayer2Username(res.data.username); })
+                    .catch(() => {});
+            }
+        }
+    }, [gameState?.player1.userId, gameState?.player2.userId]);
 
     const fightPhase = useMemo(() => {
         if (fightResultRef.current) return 'finished';
@@ -187,6 +219,8 @@ const FightPageInner: React.FC<FightPageInnerProps> = ({ fightId, userId }) => {
          gameState={gameState!}
          userId={userId}
          pointsChange={pointsChange}
+         player1Username={player1Username}
+         player2Username={player2Username}
         />
        );
     }

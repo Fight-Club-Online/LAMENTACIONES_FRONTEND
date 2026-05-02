@@ -1,5 +1,6 @@
 import { Trophy } from 'lucide-react';
 import type { UserStats, RankName, Achievement } from '../../types/dashboard.types';
+import { RankSystemModal } from './RankSystemModal'
 
 interface Props {
     stats: UserStats;
@@ -269,6 +270,11 @@ export const WinRatePanel = ({ stats, achievements }: Props) => {
                     })}
                 </div>
             </div>
+            {/* ── Sistema de Rangos ── */}
+            <div className="border-t border-white/5 pt-4">
+                <RankSystemModal />
+            </div>
+
         </div>
     );
 };
