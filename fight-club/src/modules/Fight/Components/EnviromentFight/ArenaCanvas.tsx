@@ -40,7 +40,13 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
             const health = fighter.health?.currentHealth ?? 0;
             const isDead = health <= 0;
             const action = fighter.currentAction as string;
-            const actionColor = isDead ? '#4b5563' : (ACTION_STYLES[action] || ACTION_STYLES.IDLE);
+            
+            const isBlocking = fighter.isBlocking;
+            const actionColor = isDead 
+                ? '#4b5563' 
+                : isBlocking 
+                    ? ACTION_COLORS_HEX.BLOCK 
+                    : (ACTION_STYLES[action] || ACTION_STYLES.IDLE);
 
             ctx.fillStyle = isDead ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)';
             ctx.beginPath();
@@ -53,7 +59,7 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
                 ctx.translate(0, 5); 
             }
 
-            ctx.shadowBlur = action === 'HURT' && !isDead ? 25 : isDead ? 0 : 15;
+            ctx.shadowBlur = (action === 'HURT' || isBlocking) && !isDead ? 30 : isDead ? 0 : 15;
             ctx.shadowColor = actionColor;
             ctx.fillStyle = actionColor;
             ctx.beginPath();
@@ -61,8 +67,9 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
             ctx.fill();
             
             ctx.fillStyle = isDead ? '#2d3748' : 'white'; 
+            const eyeHeight = isBlocking ? 3 : 6;
             const eyeX = fighter.direction === 'RIGHT' ? x + 42 : x + 8;
-            ctx.fillRect(eyeX, y + 25, 15, 6);
+            ctx.fillRect(eyeX, y + 25, 15, eyeHeight);
             
             ctx.restore();
         };
@@ -107,11 +114,13 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
     const getDominantColor = () => {
         if (!gameState) return ACTION_COLORS_HEX.IDLE;
         if ((gameState.player1.health?.currentHealth ?? 0) <= 0 || (gameState.player2.health?.currentHealth ?? 0) <= 0) return '#374151'; 
-        const p1 = gameState.player1.currentAction;
-        const p2 = gameState.player2.currentAction;
-        if (p1 === 'HURT' || p2 === 'HURT') return ACTION_COLORS_HEX.HURT;
-        if (p2 !== 'IDLE') return ACTION_COLORS_HEX[p2] || ACTION_COLORS_HEX.IDLE;
-        return ACTION_COLORS_HEX[p1] || ACTION_COLORS_HEX.IDLE;
+        const p1 = gameState.player1;
+        const p2 = gameState.player2;
+        
+        if (p1.currentAction === 'HURT' || p2.currentAction === 'HURT') return ACTION_COLORS_HEX.HURT;
+        if (p1.isBlocking || p2.isBlocking) return ACTION_COLORS_HEX.BLOCK;
+        if (p2.currentAction !== 'IDLE') return ACTION_COLORS_HEX[p2.currentAction] || ACTION_COLORS_HEX.IDLE;
+        return ACTION_COLORS_HEX[p1.currentAction] || ACTION_COLORS_HEX.IDLE;
     };
 
     const borderColor = getDominantColor();

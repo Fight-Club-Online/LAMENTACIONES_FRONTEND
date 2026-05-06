@@ -51,7 +51,7 @@ export const SocialAuth = () => {
           useOneTap
           theme="filled_black"
           shape="pill"
-          ux_mode="popup"
+          ux_mode="redirect"
           width="550"
         />
       </div>

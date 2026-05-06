@@ -11,7 +11,6 @@ import '../styles/index.css';
 import { getUserData } from '../Types/localUserData';
 import axios from 'axios';
 
-// ─── API helper ────────────────────────────────────────────────
 const adminApi = (path: string, options: RequestInit = {}) => {
     const base = import.meta.env.VITE_API_SUPERVISION_URL?.replace(/\/$/, '');
     const credentials = btoa(`admin:${import.meta.env.VITE_SUPERVISION_ADMIN_PASS ?? 'admin'}`);
@@ -29,7 +28,7 @@ const supervisionPublicApi = (path: string) => {
     return fetch(`${base}/api/v1/supervision${path}`);
 };
 
-// ─── Types ──────────────────────────────────────────────────────
+
 interface Report {
     id: string;
     reportedUserId: string;
@@ -68,7 +67,6 @@ interface FlaggedMessage {
 
 type AdminTab = 'overview' | 'reports' | 'bans' | 'chat' | 'notifications';
 
-// ─── Sub-components ─────────────────────────────────────────────
 
 const StatCard = ({ icon, label, value, color }: {
     icon: React.ReactNode; label: string; value: string | number; color: string;
@@ -89,7 +87,6 @@ const SectionHeader = ({ icon, title }: { icon: React.ReactNode; title: string }
     </div>
 );
 
-// ─── BAN PANEL ──────────────────────────────────────────────────
 const BanPanel = () => {
     const [userId, setUserId] = useState('');
     const [reason, setReason] = useState('CHEATING');
@@ -247,7 +244,6 @@ const BanPanel = () => {
     );
 };
 
-// ─── REPORTS PANEL ──────────────────────────────────────────────
 const ReportsPanel = () => {
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(false);
@@ -368,7 +364,6 @@ const ReportsPanel = () => {
     );
 };
 
-// ─── CHAT PANEL ─────────────────────────────────────────────────
 const ChatPanel = () => {
     const [fightId, setFightId] = useState('');
     const [messages, setMessages] = useState<any[]>([]);
@@ -453,7 +448,6 @@ const ChatPanel = () => {
     );
 };
 
-// ─── NOTIFICATIONS PANEL ────────────────────────────────────────
 const NotificationsPanel = () => {
     const [userId, setUserId] = useState('');
     const [notifs, setNotifs] = useState<any[]>([]);
@@ -505,7 +499,6 @@ const NotificationsPanel = () => {
     );
 };
 
-// ─── Helpers ────────────────────────────────────────────────────
 const AdminInput = ({ label, value, onChange, placeholder, type = 'text' }: {
     label: string; value: string; onChange: (v: string) => void;
     placeholder?: string; type?: string;
@@ -527,7 +520,6 @@ const StatusBadge = ({ label, active }: { label: string; active: boolean }) => (
     </div>
 );
 
-// ─── TAB CONFIG ─────────────────────────────────────────────────
 const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <BarChart2 size={14} /> },
     { id: 'reports', label: 'Reportes', icon: <FileText size={14} /> },
@@ -536,7 +528,6 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { id: 'notifications', label: 'Notificaciones', icon: <Bell size={14} /> },
 ];
 
-// ─── MAIN PAGE ──────────────────────────────────────────────────
 export const AdminPage: React.FC = () => {
     const navigate = useNavigate();
     const [userName, setUserName] = useState('');

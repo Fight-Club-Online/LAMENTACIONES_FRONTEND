@@ -109,7 +109,7 @@ export const PlayerDashboard = () => {
                                 const userData = getUserData(); 
                                 navigate(userData?.role === 'ADMIN' ? '/admin' : '/lobby');
                             }}
-                            className="group flex flex-col items-center justify-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-4 rounded-2xl transition-all duration-300"
+                            className="group flex flex-col items-center justify-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-4 rounded-2xl transition-all duration-300 cursor-pointer"
                         >
                             <span className="text-white/60 group-hover:text-white text-lg">←</span>
                             <span className="text-[8px] font-black uppercase tracking-widest text-white/40 group-hover:text-white/60">Lobby</span>
@@ -117,7 +117,7 @@ export const PlayerDashboard = () => {
                         {/* Botón Cerrar Sesión */}
                         <button
                             onClick={handleLogout}
-                            className="group flex flex-col items-center justify-center gap-1 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/40 p-4 rounded-2xl transition-all duration-300"
+                            className="group flex flex-col items-center justify-center gap-1 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/40 p-4 rounded-2xl transition-all duration-300 cursor-pointer"
                         >
                             <LogOut size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
                             <span className="text-[8px] font-black uppercase tracking-widest text-red-500/60 group-hover:text-red-500">Salir</span>
