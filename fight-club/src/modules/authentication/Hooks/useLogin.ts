@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import { authService } from '../services/authService';
 
 export const useLogin = () => {
@@ -6,12 +7,12 @@ export const useLogin = () => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [profileRoute, setProfileRoute] = useState('/login');
     const [error, setError] = useState<string | null>(null);
+    const profileRouteRef = useRef('/lobby');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         if (!email || !password) {
             setError("TODOS LOS CAMPOS SON OBLIGATORIOS");
             return;
@@ -22,23 +23,29 @@ export const useLogin = () => {
 
         try {
             const data = await authService.login({ email, password });
-            
+
             if (data?.accessToken && data?.refreshToken) {
-                // 1. Guardamos el token de acceso (vida corta)
                 localStorage.setItem('fight_club_token', data.accessToken);
                 localStorage.setItem('fight_club_userId', data.userId);
-                // 2. Guardamos el token de refresco (vida larga)
                 localStorage.setItem('fight_club_refresh', data.refreshToken);
-                
-                // 3. Guardamos info del usuario para la UI
+
+                // Decodificar el JWT para leer el rol real
+                const decoded: any = jwtDecode(data.accessToken);
+                console.log('🔍 JWT decoded:', decoded); // borra esto después
+
+                const role = decoded.role 
+                    || decoded.roles?.[0] 
+                    || decoded.authorities?.[0]?.replace?.('ROLE_', '')
+                    || 'USER';
+
                 localStorage.setItem('user_data', JSON.stringify({
                     userId: data.userId,
                     username: data.username,
                     email: data.email,
-                    role: data.role
+                    role: role
                 }));
 
-                setProfileRoute(`/lobby`);
+                profileRouteRef.current = role === 'ADMIN' ? '/admin' : '/lobby';
                 setIsSuccess(true);
             } else {
                 setError("RESPUESTA DEL SERVIDOR INCOMPLETA");
@@ -51,11 +58,11 @@ export const useLogin = () => {
         }
     };
 
-    return { 
-        email, setEmail, 
-        password, setPassword, 
-        isLoading, isSuccess, 
-        profileRoute,
-        error, handleSubmit 
+    return {
+        email, setEmail,
+        password, setPassword,
+        isLoading, isSuccess,
+        profileRoute: profileRouteRef.current,
+        error, handleSubmit
     };
 };

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import "./modules/authentication/styles/index.css"; 
+import "./modules/authentication/styles/index.css";
 import "./modules/Lobby/styles/index.css";
 
 import { LoginPage } from "./modules/authentication/pages/LoginPage.tsx";
@@ -10,8 +10,9 @@ import { PlayerDashboard } from "./modules/authentication/Components/profile/Pla
 import { PrivateRoute } from "./modules/authentication/Components/ui/PrivateRoute.tsx";
 import { LobbyPage } from './modules/Lobby/pages/lobby.tsx';
 import { WaitingRoomPage } from "./modules/Lobby/pages/WaitingRoomPage.tsx";
-import { FightPage } from "./modules/Fight/pages/FightPage.tsx"; 
-
+import { FightPage } from "./modules/Fight/pages/FightPage.tsx";
+import { AdminPage } from './modules/Lobby/pages/AdminPage.tsx';
+import { AdminRoute } from "./modules/authentication/Components/ui/AdminRoute.tsx";
 function App() {
   return (
     <BrowserRouter>
@@ -19,28 +20,34 @@ function App() {
         <Routes>
           {/* Redirección inicial */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-          
+
           {/* Rutas Públicas */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/guest" element={<GuestPage />} />
-          
+
           {/* Perfil de Usuario */}
           <Route path="/:username/perfil" element={
             <PrivateRoute>
               <PlayerDashboard />
             </PrivateRoute>
           } />
-          
+
           <Route path="/profile" element={<Navigate to="/login" replace />} />
-          
+
           {/* Lobby y Salas de espera */}
           <Route path="/lobby" element={
             <PrivateRoute>
               <LobbyPage />
             </PrivateRoute>
           } />
-          
+
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          } />
+
           <Route path="/waiting-room" element={
             <PrivateRoute>
               <WaitingRoomPage />

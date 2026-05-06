@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { DashboardService } from '../../services/profileService';
 import type { UserProfile, UserStats } from '../../types/dashboard.types';
 
-import { StatsCards } from './StatsCards'; 
+import { StatsCards } from './StatsCards';
 import { ProfileCard } from './ProfileCard';
 import { WinRatePanel } from './WinRatePanel';
-import { HistoryPanel } from './HistoryPanel'; 
+import { HistoryPanel } from './HistoryPanel';
+import { getUserData } from '../../../Lobby/Types/localUserData';
 
 const DEFAULT_STATS: UserStats = {
-    level: 1, points: 0, streak: 0, followers: 0, 
+    level: 1, points: 0, streak: 0, followers: 0,
     totalFights: 0, wins: 0, losses: 0, draws: 0, userId: '',
     rank: 'HIERRO_I',
     achievements: []
@@ -27,12 +28,12 @@ export const PlayerDashboard = () => {
             try {
                 const userDataRaw = localStorage.getItem('user_data');
                 if (!userDataRaw) {
-                    navigate('/login'); 
+                    navigate('/login');
                     return;
                 }
 
                 const { userId } = JSON.parse(userDataRaw);
-                const { profile: fetchedProfile, stats: fetchedStats } = 
+                const { profile: fetchedProfile, stats: fetchedStats } =
                     await DashboardService.getDashboardData(userId);
 
                 if (fetchedProfile) setProfile(fetchedProfile);
@@ -49,7 +50,7 @@ export const PlayerDashboard = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('user_data');
-        localStorage.removeItem('fight_club_token');   
+        localStorage.removeItem('fight_club_token');
         localStorage.removeItem('fight_club_refresh');
         localStorage.removeItem('fight_club_userId');
         navigate('/login');
@@ -76,7 +77,7 @@ export const PlayerDashboard = () => {
     return (
         <div className="min-h-screen bg-[#0f0e0d] text-white p-4 md:p-8 font-sans antialiased selection:bg-orange-500/30">
             <div className="max-w-[1900px] mx-auto space-y-8 animate-in fade-in duration-700">
-                
+
                 {/* Header con Botón de Logout */}
                 <header className="flex flex-col md:flex-row md:items-start justify-between gap-6 border-b border-white/5 pb-8">
                     <div className="flex-1">
@@ -104,14 +105,17 @@ export const PlayerDashboard = () => {
                         </div>
                         {/* Botón Volver al Lobby */}
                         <button
-                            onClick={() => navigate('/lobby')}
+                            onClick={() => {
+                                const userData = getUserData(); 
+                                navigate(userData?.role === 'ADMIN' ? '/admin' : '/lobby');
+                            }}
                             className="group flex flex-col items-center justify-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-4 rounded-2xl transition-all duration-300"
                         >
                             <span className="text-white/60 group-hover:text-white text-lg">←</span>
                             <span className="text-[8px] font-black uppercase tracking-widest text-white/40 group-hover:text-white/60">Lobby</span>
                         </button>
                         {/* Botón Cerrar Sesión */}
-                        <button 
+                        <button
                             onClick={handleLogout}
                             className="group flex flex-col items-center justify-center gap-1 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/40 p-4 rounded-2xl transition-all duration-300"
                         >
@@ -130,7 +134,7 @@ export const PlayerDashboard = () => {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                             <StatsCards stats={stats} />
                         </div>
-                        
+
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <HistoryPanel />
                             <WinRatePanel stats={stats} achievements={stats.achievements} />

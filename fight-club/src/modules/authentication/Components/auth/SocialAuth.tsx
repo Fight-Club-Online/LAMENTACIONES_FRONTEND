@@ -10,11 +10,11 @@ export const SocialAuth = () => {
   const handleSuccess = async (credentialResponse: any) => {
     try {
       const response = await authApi.post('/auth/oauth/google', {
-        idToken: credentialResponse.credential 
+        idToken: credentialResponse.credential
       });
-      
+
       const data = response.data;
-      
+
       if (data.accessToken) {
         localStorage.setItem('fight_club_token', data.accessToken);
         localStorage.setItem('fight_club_refresh', data.refreshToken);
@@ -27,8 +27,8 @@ export const SocialAuth = () => {
         navigate(`/lobby`);
       }
     } catch (err: any) {
-      setError("ERROR AL AUTENTICAR CON GOOGLE");
-      console.error("Error en el Arena:", err.response?.status || err.message);
+      const msg = err.response?.data?.message || "ERROR AL AUTENTICAR CON GOOGLE";
+      setError(msg.toUpperCase());
     }
   };
 
@@ -37,7 +37,7 @@ export const SocialAuth = () => {
       <div className="text-[11px] text-white/40 uppercase tracking-[0.3em] font-black italic">
         O continúa con
       </div>
-      
+
       {error && (
         <div className="bg-[#E25127]/10 border border-[#E25127]/20 text-[#E25127] text-[10px] py-3 px-4 rounded-lg uppercase tracking-[0.2em] font-black flex items-center gap-3 w-full">
           <span>⚠️</span> {error}
