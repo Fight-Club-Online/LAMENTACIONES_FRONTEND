@@ -97,3 +97,22 @@ export interface CharacterAssets {
     attack_url: string;
     hurt_url: string;
 }
+
+
+export interface FightSocketDTO{
+    id: string,
+    player1: FigtherSocketDTO,
+    player2: FigtherSocketDTO
+}
+
+export interface FigtherSocketDTO{
+    userId : string,
+    health : Health,
+    posX: number,
+    posY:number,
+    isGrounded:boolean,
+    direction : Direction,
+    currentAction : FighterAction,
+    isBlocking : boolean,
+    currentStunFrames : number
+}
