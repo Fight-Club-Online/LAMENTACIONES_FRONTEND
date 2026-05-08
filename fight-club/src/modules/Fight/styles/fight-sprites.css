@@ -1,0 +1,69 @@
+.fight-sprite-slot {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: left, top, width, height, opacity;
+  --sprite-direction: 1;
+}
+
+.fight-sprite-sheet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 64px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform-origin: center center;
+  will-change: transform, filter, background-position;
+  --sprite-scale: 1;
+  --sprite-mode: movement;
+  --sprite-offset-y: 0px;
+  transform: translate(-50%, calc(-50% + var(--sprite-offset-y))) scale(var(--sprite-scale)) scaleX(var(--sprite-direction));
+}
+
+/* Idle animation - 10 frames, 56px each = 560px total */
+.fight-sprite-idle {
+  background-size: 560px 64px;
+  animation: fightSpriteIdle 0.8s steps(10) infinite;
+}
+
+/* Run animation - 10 frames, 56px each = 560px total */
+.fight-sprite-run {
+  background-size: 560px 64px;
+  animation: fightSpriteRun 0.6s steps(10) infinite;
+}
+
+/* Attack animation - 6 frames, 56px each = 336px total */
+.fight-sprite-attack {
+  background-size: 336px 64px;
+  animation: fightSpriteAttack 0.4s steps(6) infinite;
+}
+
+@keyframes fightSpriteIdle {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -560px 0;
+  }
+}
+
+@keyframes fightSpriteRun {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -560px 0;
+  }
+}
+
+@keyframes fightSpriteAttack {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -336px 0;
+  }
+}
