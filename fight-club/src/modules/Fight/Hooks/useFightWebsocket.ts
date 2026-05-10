@@ -7,7 +7,8 @@ import type {
     Fight, 
     HelpButton, 
     FighterAction, 
-    PlayerInputDto 
+    PlayerInputDto, 
+    FightSocketDTO
 } from '../types/fight';
 
 const API_URL = import.meta.env.VITE_API_FIGHT_URL || 
@@ -87,18 +88,55 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
             onConnect: () => {
                 setIsConnected(true);
                 setError(null);
+
+                // para los movimientos
                 client.subscribe(`/topic/fight.${fightId}`, (message) => {
                     try {
-                        const payload = JSON.parse(message.body);
-                        if ("player1" in payload && "player2" in payload) {
-                            setGameState(payload as Fight);
-                        } else if ("buttonId" in payload || ("status" in payload && !("player1" in payload))) {
-                            setGameState(prev => prev ? { ...prev, helpButton: payload as HelpButton } : null);
-                        }
+                        const payload: FightSocketDTO = JSON.parse(message.body);
+                        console.log(payload)
+                        setGameState(prev => prev ? {...prev,
+                            player1: {...prev.player1, ...payload.player1},
+                            player2:{...prev.player2,...payload.player2},
+                            active: payload.active
+                        } : null);
                     } catch (e) {
-                        console.error('Error parseando mensaje:', e);
+                        console.error('Error parseando Fight:', e);
                     }
                 });
+
+                //boton de ayuda 
+                client.subscribe(`/topic/fight.${fightId}.helpButton`, (message) => {
+                    try {
+                        const payload: HelpButton = JSON.parse(message.body);
+    
+                        setGameState(prev => prev ? { ...prev, helpButton: payload } : null);
+                    } catch (e) {
+                        console.error('Error parseando HelpButton:', e);
+                    }
+                });
+
+                //cambio de jugaor
+                client.subscribe(`/topic/fight.${fightId}.fighters`, (message) => {
+                    try {
+                        const payload: Fight = JSON.parse(message.body);
+                        setGameState(payload);
+                    } catch (e) {
+                        console.error('Error parseando fighters:', e);
+                    }
+                });
+
+
+                //coso fig seleccionado
+                client.subscribe(`/topic/fight.${fightId}.selected`, (message) => {
+                    try {
+                        const payload: Fight = JSON.parse(message.body);
+                        setGameState(payload);
+                    } catch (e) {
+                        console.error('Error parseando selected:', e);
+                    }
+                });
+
+
             },
             onDisconnect: () => setIsConnected(false),
             onStompError: (frame) => {
