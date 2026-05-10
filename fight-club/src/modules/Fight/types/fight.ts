@@ -102,7 +102,9 @@ export interface CharacterAssets {
 export interface FightSocketDTO{
     id: string,
     player1: FigtherSocketDTO,
-    player2: FigtherSocketDTO
+    player2: FigtherSocketDTO,
+    active : boolean
+
 }
 
 export interface FigtherSocketDTO{

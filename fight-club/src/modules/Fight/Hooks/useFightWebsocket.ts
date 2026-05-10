@@ -93,9 +93,11 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
                 client.subscribe(`/topic/fight.${fightId}`, (message) => {
                     try {
                         const payload: FightSocketDTO = JSON.parse(message.body);
+                        console.log(payload)
                         setGameState(prev => prev ? {...prev,
                             player1: {...prev.player1, ...payload.player1},
-                            player2:{...prev.player2,...payload.player2}
+                            player2:{...prev.player2,...payload.player2},
+                            active: payload.active
                         } : null);
                     } catch (e) {
                         console.error('Error parseando Fight:', e);
