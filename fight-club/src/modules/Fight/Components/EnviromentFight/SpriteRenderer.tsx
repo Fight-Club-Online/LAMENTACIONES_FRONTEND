@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import type { Fighter } from '../../types/fight';
 import type { CharacterAssets } from '../../../Lobby/Config/axiosLobby';
 import { useSpriteAnimation } from '../../Hooks/useSpriteAnimation';
+import { useSpriteSheetDetection } from '../../Hooks/useSpriteSheetDetection';
 import {
   mapActionToAnimationType,
-  getAnimationConfigForFighter,
   getSpriteAssetUrl,
   getSpriteGlowColor,
   buildAdditionalSpriteVariables,
@@ -40,11 +40,14 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
 
   const isDead = (fighter.health?.currentHealth ?? 0) <= 0;
   const animationType = mapActionToAnimationType(fighter.currentAction);
-  const animationConfig = getAnimationConfigForFighter(fighter, animationType);
   const spriteUrl = getSpriteAssetUrl(characterAssets.get(spriteKey), fighter.currentAction, isDead);
   const glowColor = getSpriteGlowColor(fighter.currentAction, isDead);
   const direction = fighter.direction === 'RIGHT' ? 1 : -1;
   const animationClass = getAnimationClass(animationType);
+
+  // Usar detección automática de frames en lugar de config hardcodeada
+  const isLoopAnimation = animationType === 'idle' || animationType === 'run';
+  const { detectedConfig } = useSpriteSheetDetection(spriteUrl, animationType, isLoopAnimation);
 
   // Actualizar posición y variables del slot
   useEffect(() => {
@@ -66,13 +69,13 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
     }
   }, [spriteUrl]);
 
-  // Actualizar variables de animación dinámicamente
+  // Actualizar variables de animación dinámicamente usando detección automática
   useEffect(() => {
-    if (!spriteRef.current || !animationConfig) return;
+    if (!spriteRef.current || !detectedConfig) return;
 
     const additionalVars = buildAdditionalSpriteVariables(glowColor, scale, direction, 0);
-    applySpriteVariables(spriteRef.current, animationConfig, additionalVars);
-  }, [animationConfig, glowColor, scale, direction, fighter.direction, applySpriteVariables]);
+    applySpriteVariables(spriteRef.current, detectedConfig, additionalVars);
+  }, [detectedConfig, glowColor, scale, direction, fighter.direction, applySpriteVariables]);
 
   // Aplicar/remover clase de animación y reiniciar animación CSS
   useEffect(() => {

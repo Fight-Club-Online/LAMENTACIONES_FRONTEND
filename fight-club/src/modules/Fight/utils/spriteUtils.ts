@@ -1,7 +1,6 @@
 import type { Fighter } from '../types/fight';
 import type { CharacterAssets } from '../../../Lobby/Config/axiosLobby';
-import type { AnimationFrameConfig, SpriteStyleVariables } from '../types/animation.types';
-import { getCharacterAnimationConfig } from '../Config/animationConfig';
+import type { SpriteStyleVariables } from '../types/animation.types';
 import { ACTION_COLORS_HEX } from '../Components/EnviromentFight/ArenaVisuals';
 
 /**
@@ -20,17 +19,6 @@ export const mapActionToAnimationType = (
     return 'attack';
   }
   return 'idle';
-};
-
-/**
- * Obtiene la configuración de animación correcta para el luchador
- */
-export const getAnimationConfigForFighter = (
-  fighter: Fighter,
-  animationType: 'idle' | 'run' | 'attack' | 'hurt'
-): AnimationFrameConfig | null => {
-  const characterAnimationConfig = getCharacterAnimationConfig(fighter.characterId);
-  return characterAnimationConfig[animationType] || null;
 };
 
 /**
