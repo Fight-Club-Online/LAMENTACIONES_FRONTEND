@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import type { Fighter } from '../../types/fight';
 import type { CharacterAssets } from '../../../Lobby/Config/axiosLobby';
 import { useSpriteAnimation } from '../../Hooks/useSpriteAnimation';
-import { useSpriteSheetDetection } from '../../Hooks/useSpriteSheetDetection';
+import { useCharacterSprites } from '../../Hooks/useCharacterSprites';
 import {
   mapActionToAnimationType,
   getSpriteAssetUrl,
@@ -40,14 +40,30 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
 
   const isDead = (fighter.health?.currentHealth ?? 0) <= 0;
   const animationType = mapActionToAnimationType(fighter.currentAction);
-  const spriteUrl = getSpriteAssetUrl(characterAssets.get(spriteKey), fighter.currentAction, isDead);
+  const assets = characterAssets.get(spriteKey);
+  const spriteUrl = getSpriteAssetUrl(assets, fighter.currentAction, isDead);
   const glowColor = getSpriteGlowColor(fighter.currentAction, isDead);
   const direction = fighter.direction === 'RIGHT' ? 1 : -1;
   const animationClass = getAnimationClass(animationType);
 
-  // Usar detección automática de frames en lugar de config hardcodeada
-  const isLoopAnimation = animationType === 'idle' || animationType === 'run';
-  const { detectedConfig } = useSpriteSheetDetection(spriteUrl, animationType, isLoopAnimation);
+  // Pre-cargar TODOS los sprites del personaje de una vez
+  // Esto evita delays cuando se cambia de animación
+  const { getConfig, isLoaded } = useCharacterSprites(assets);
+  
+  // Obtener la config para el tipo de animación actual
+  const detectedConfig = getConfig(animationType);
+
+  // Debug: ver qué valores está detectando
+  useEffect(() => {
+    if (animationType === 'attack') {
+      console.log('[v0] Attack animation debug:', {
+        spriteUrl,
+        animationType,
+        detectedConfig,
+        isLoaded,
+      });
+    }
+  }, [spriteUrl, animationType, detectedConfig, isLoaded]);
 
   // Actualizar posición y variables del slot
   useEffect(() => {
@@ -69,32 +85,35 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
     }
   }, [spriteUrl]);
 
-  // Actualizar variables de animación dinámicamente usando detección automática
+  // Actualizar variables de animación Y reiniciar animación CSS
+  // Combinamos ambas operaciones para asegurar que las variables se apliquen antes del reinicio
   useEffect(() => {
     if (!spriteRef.current || !detectedConfig) return;
 
-    const additionalVars = buildAdditionalSpriteVariables(glowColor, scale, direction, 0);
-    applySpriteVariables(spriteRef.current, detectedConfig, additionalVars);
-  }, [detectedConfig, glowColor, scale, direction, fighter.direction, applySpriteVariables]);
-
-  // Aplicar/remover clase de animación y reiniciar animación CSS
-  useEffect(() => {
-    if (!spriteRef.current) return;
-
     const sprite = spriteRef.current;
 
-    // Remover todas las clases de acción
+    console.log('[v0] Applying animation config:', {
+      animationType,
+      detectedConfig,
+      spriteUrl,
+    });
+
+    // 1. Primero aplicar las variables CSS
+    const additionalVars = buildAdditionalSpriteVariables(glowColor, scale, direction, 0);
+    applySpriteVariables(sprite, detectedConfig, additionalVars);
+
+    // 2. Remover todas las clases de acción
     sprite.classList.remove('action-attack', 'action-hurt', 'action-run', 'action-idle');
 
-    // Forzar reinicio de la animación CSS
+    // 3. Forzar reinicio de la animación CSS
     sprite.style.animation = 'none';
     // Disparar reflow para que el navegador procese el cambio
     void sprite.offsetHeight;
     sprite.style.animation = '';
 
-    // Agregar clase actual
+    // 4. Agregar clase actual
     sprite.classList.add(animationClass);
-  }, [animationClass, spriteUrl]);
+  }, [detectedConfig, animationClass, glowColor, scale, direction, applySpriteVariables, animationType, spriteUrl]);
 
   // Manejar fin de animación para volver a idle en attack/hurt
   useEffect(() => {
