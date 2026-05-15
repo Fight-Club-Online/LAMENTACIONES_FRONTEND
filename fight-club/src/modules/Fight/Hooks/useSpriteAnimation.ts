@@ -10,8 +10,9 @@ export const useSpriteAnimation = () => {
    * Calcula las variables CSS necesarias para una animación
    */
   const calculateSpriteVariables = useCallback(
-    (config: AnimationFrameConfig): Partial<SpriteStyleVariables> => {
-      const sheetWidth = config.frameWidth * config.frames;
+    (config: AnimationFrameConfig & { sheetWidth?: number }): Partial<SpriteStyleVariables> => {
+      // Usar sheetWidth real si está disponible, sino calcular
+      const sheetWidth = config.sheetWidth ?? (config.frameWidth * config.frames);
       const animationOffset = `-${sheetWidth}px`;
 
       return {
@@ -32,7 +33,7 @@ export const useSpriteAnimation = () => {
   const applySpriteVariables = useCallback(
     (
       element: HTMLElement | null,
-      config: AnimationFrameConfig,
+      config: AnimationFrameConfig & { sheetWidth?: number },
       additionalVars?: Partial<SpriteStyleVariables>
     ) => {
       if (!element) return;
