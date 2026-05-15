@@ -102,6 +102,17 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
     const additionalVars = buildAdditionalSpriteVariables(glowColor, scale, direction, 0);
     applySpriteVariables(sprite, detectedConfig, additionalVars);
 
+    // Debug: Verificar que las variables CSS se aplicaron correctamente
+    const computedStyle = getComputedStyle(sprite);
+    console.log('[v0] CSS Variables after apply:', {
+      frames: computedStyle.getPropertyValue('--frames'),
+      frameWidth: computedStyle.getPropertyValue('--frame-width'),
+      frameHeight: computedStyle.getPropertyValue('--frame-height'),
+      sheetWidth: computedStyle.getPropertyValue('--sheet-width'),
+      animationOffset: computedStyle.getPropertyValue('--animation-offset'),
+      animationDuration: computedStyle.getPropertyValue('--animation-duration'),
+    });
+
     // 2. Remover todas las clases de acción
     sprite.classList.remove('action-attack', 'action-hurt', 'action-run', 'action-idle');
 
