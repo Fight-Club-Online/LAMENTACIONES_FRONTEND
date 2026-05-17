@@ -1,5 +1,5 @@
 import type { Fighter } from '../types/fight';
-import type { CharacterAssets } from '../../../Lobby/Config/axiosLobby';
+import type { CharacterAssets } from '../../Lobby/Config/axiosLobby';
 import type { SpriteStyleVariables } from '../types/animation.types';
 import { ACTION_COLORS_HEX } from '../Components/EnviromentFight/ArenaVisuals';
 

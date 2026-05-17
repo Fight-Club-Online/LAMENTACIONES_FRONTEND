@@ -37,6 +37,8 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
   const slotRef = useRef<HTMLDivElement>(null);
   const spriteRef = useRef<HTMLDivElement>(null);
   const { applySpriteVariables } = useSpriteAnimation();
+  const isLockedRef   = useRef(false);
+  const lockedTypeRef = useRef<'attack' | 'hurt' | null>(null);
 
   const isDead = (fighter.health?.currentHealth ?? 0) <= 0;
   const animationType = mapActionToAnimationType(fighter.currentAction);
@@ -68,6 +70,7 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
   // Actualizar posición y variables del slot
   useEffect(() => {
     if (!slotRef.current) return;
+    if (isLockedRef.current) return;
 
     const element = slotRef.current;
     element.style.left = `${(position.x / canvasWidth) * 100}%`;
@@ -80,6 +83,7 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
   // Actualizar sprite URL
   useEffect(() => {
     if (!spriteRef.current) return;
+    if (isLockedRef.current) return;
     if (spriteUrl) {
       spriteRef.current.style.backgroundImage = `url(${spriteUrl})`;
     }
@@ -97,6 +101,14 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
       detectedConfig,
       spriteUrl,
     });
+
+    if (isLockedRef.current) return;
+
+    // Activar lock cuando empieza una animación one-shot 
+    if (animationType === 'attack' || animationType === 'hurt') {
+      isLockedRef.current   = true;
+      lockedTypeRef.current = animationType;
+    }
 
     // 1. Primero aplicar las variables CSS
     const additionalVars = buildAdditionalSpriteVariables(glowColor, scale, direction, 0);
@@ -124,7 +136,15 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
 
     // 4. Agregar clase actual
     sprite.classList.add(animationClass);
-  }, [detectedConfig, animationClass, glowColor, scale, direction, applySpriteVariables, animationType, spriteUrl]);
+    sprite.style.animationTimingFunction = `steps(${detectedConfig.frames})`;
+    sprite.style.animationDirection = 'normal';
+    if (animationType === 'attack') {
+      const frameTime = detectedConfig.duration / detectedConfig.frames;
+      sprite.style.animationDelay = `-${frameTime * 3}s`;
+    } else {
+      sprite.style.animationDelay = '0s';
+    }
+  }, [detectedConfig, animationClass, glowColor, scale, direction, applySpriteVariables, animationType]);
 
   // Manejar fin de animación para volver a idle en attack/hurt
   useEffect(() => {
@@ -133,27 +153,39 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
     const sprite = spriteRef.current;
 
     const handleAnimationEnd = () => {
-      // Solo si la animación que terminó fue attack o hurt
-      if (animationType === 'attack' || animationType === 'hurt') {
-        // Remover las clases de animación
-        sprite.classList.remove('action-attack', 'action-hurt');
+      if (lockedTypeRef.current === null) return;   // no hay lock activo
+        // Liberar lock
+        isLockedRef.current   = false;
+        lockedTypeRef.current = null;
 
-        // Cambiar a idle
+        // Restaurar spritesheet de idle y aplicar su config
+        const idleConfig = getConfig('idle');
+        if (idleConfig && spriteRef.current) {
+          const idleUrl = assets?.idle_url;
+          if (idleUrl) spriteRef.current.style.backgroundImage = `url(${idleUrl})`;
+          const additionalVars = buildAdditionalSpriteVariables(glowColor, scale, direction, 0);
+          applySpriteVariables(spriteRef.current, idleConfig, additionalVars);
+        }
+        
+        sprite.classList.remove('action-attack', 'action-hurt', 'action-run');
         sprite.classList.add('action-idle');
-
-        // Forzar reinicio de la animación
         sprite.style.animation = 'none';
+        sprite.style.animationDelay = '0s';
         void sprite.offsetHeight;
         sprite.style.animation = '';
-      }
-    };
+        if (idleConfig) {
+          sprite.style.animationTimingFunction = `steps(${idleConfig.frames})`;
+          sprite.style.animationDirection = 'normal';
+        }
+      };
+
 
     sprite.addEventListener('animationend', handleAnimationEnd);
 
     return () => {
       sprite.removeEventListener('animationend', handleAnimationEnd);
     };
-  }, [animationType]);
+  }, [getConfig, assets, glowColor, scale, direction, applySpriteVariables]);
 
   return (
     <div

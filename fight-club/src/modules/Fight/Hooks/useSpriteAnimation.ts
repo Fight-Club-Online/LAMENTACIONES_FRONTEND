@@ -42,13 +42,13 @@ export const useSpriteAnimation = () => {
 
       // Aplicar variables base de animación
       Object.entries(variables).forEach(([key, value]) => {
-        element.style.setProperty(key, value);
+        if (value !== undefined) element.style.setProperty(key, value);
       });
 
       // Aplicar variables adicionales (glow, scale, dirección, etc)
       if (additionalVars) {
         Object.entries(additionalVars).forEach(([key, value]) => {
-          element.style.setProperty(key, value);
+         if (value !== undefined) element.style.setProperty(key, value);
         });
       }
     },
@@ -75,7 +75,7 @@ export const useSpriteAnimation = () => {
     };
 
     Object.entries(defaultVariables).forEach(([key, value]) => {
-      element.style.setProperty(key, value);
+      if (value !== undefined) element.style.setProperty(key, value);
     });
   }, []);
 
