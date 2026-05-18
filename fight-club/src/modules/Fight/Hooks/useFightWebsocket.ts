@@ -79,7 +79,7 @@ export const useFightWebsocket = (fightId: string, userId: string): FightWebsock
         if (!fightId) return;
 
         const client = new Client({
-            webSocketFactory: () => new SockJS(WS_ENDPOINT, null, {
+            webSocketFactory: () => new SockJS(`${WS_ENDPOINT}?fightId=${fightId}`, null, {
                 transports: ['websocket']
             }),
             reconnectDelay: 5000,
