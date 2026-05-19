@@ -1,0 +1,95 @@
+/**
+ * Sistema de animaciones de sprites dinámico
+ * Usa CSS variables para soportar diferentes personajes con diferentes
+ * tamaños de frame, cantidad de frames y duraciones de animación
+ */
+
+:root {
+  /* Valores por defecto (96x96) */
+  --frames: 10;
+  --frame-width: 96px;
+  --frame-height: 96px;
+  --sheet-width: 960px;
+  --animation-offset: -960px;
+  --animation-duration: 0.8s;
+}
+
+.fight-sprite-slot {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: left, top, width, height, opacity;
+  --sprite-direction: 1;
+  --sprite-glow: #00ff00;
+  --sprite-scale: 1;
+  --sprite-offset-y: 0px;
+}
+
+/**
+ * Sprite genérico dinámico
+ * Todas las dimensiones y animaciones se controlan vía CSS variables
+ */
+.fight-sprite-sheet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  /* Dimensiones dinámicas */
+  width: var(--frame-width);
+  height: var(--frame-height);
+
+  /* Ocultar overflow para mostrar solo 1 frame */
+  overflow: hidden;
+
+  background-repeat: no-repeat;
+  background-size: var(--sheet-width) var(--frame-height);
+
+  image-rendering: pixelated;
+  transform-origin: center center;
+  will-change: transform, filter, background-position;
+
+  /* Propiedades de animación por defecto (para idle y run) */
+  animation-name: spriteAnimation;
+  animation-duration: var(--animation-duration);
+  animation-timing-function: steps(var(--frames));
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+
+  transform: translate(-50%, calc(-50% + var(--sprite-offset-y)))
+    scale(var(--sprite-scale)) scaleX(var(--sprite-direction));
+}
+
+/**
+ * Animación genérica reutilizable
+ * Funciona para cualquier cantidad de frames y tamaño de spritesheet
+ */
+@keyframes spriteAnimation {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: var(--animation-offset) 0;
+  }
+}
+
+/**
+ * Modificadores para diferentes acciones
+ * Attack y hurt juegan una sola vez, después se congelan en el último frame
+ */
+.fight-sprite-sheet.action-attack {
+  animation-iteration-count: 1;
+}
+
+.fight-sprite-sheet.action-hurt {
+  animation-iteration-count: 1;
+}
+
+/* Idle y run hacen loop infinito */
+.fight-sprite-sheet.action-idle {
+  animation-iteration-count: infinite;
+}
+
+.fight-sprite-sheet.action-run {
+  animation-iteration-count: infinite;
+}
