@@ -128,22 +128,25 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
     // 2. Remover todas las clases de acción
     sprite.classList.remove('action-attack', 'action-hurt', 'action-run', 'action-idle');
 
-    // 3. Forzar reinicio de la animación CSS
     sprite.style.animation = 'none';
-    // Disparar reflow para que el navegador procese el cambio
-    void sprite.offsetHeight;
-    sprite.style.animation = '';
+void sprite.offsetHeight;
 
-    // 4. Agregar clase actual
-    sprite.classList.add(animationClass);
-    sprite.style.animationTimingFunction = `steps(${detectedConfig.frames})`;
-    sprite.style.animationDirection = 'normal';
-    if (animationType === 'attack') {
-      const frameTime = detectedConfig.duration / detectedConfig.frames;
-      sprite.style.animationDelay = `-${frameTime * 3}s`;
-    } else {
-      sprite.style.animationDelay = '0s';
-    }
+const iterCount = (animationType === 'attack' || animationType === 'hurt') ? '1' : 'infinite';
+const delay = animationType === 'attack'
+  ? `-${(detectedConfig.duration / detectedConfig.frames) * 3}s`
+  : '0s';
+
+sprite.style.animation = [
+  `spriteAnimation`,
+  `${detectedConfig.duration}s`,
+  `steps(${detectedConfig.frames}, end)`,
+  `${delay}`,
+  `${iterCount}`,
+  `normal`,
+  `forwards`,
+].join(' ');
+
+sprite.classList.add(animationClass);
   }, [detectedConfig, animationClass, glowColor, scale, direction, applySpriteVariables, animationType]);
 
   // Manejar fin de animación para volver a idle en attack/hurt
@@ -168,15 +171,23 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
         }
         
         sprite.classList.remove('action-attack', 'action-hurt', 'action-run');
-        sprite.classList.add('action-idle');
-        sprite.style.animation = 'none';
-        sprite.style.animationDelay = '0s';
-        void sprite.offsetHeight;
-        sprite.style.animation = '';
-        if (idleConfig) {
-          sprite.style.animationTimingFunction = `steps(${idleConfig.frames})`;
-          sprite.style.animationDirection = 'normal';
-        }
+sprite.classList.add('action-idle');
+sprite.style.animation = 'none';
+void sprite.offsetHeight;
+
+if (idleConfig) {
+  sprite.style.animation = [
+    `spriteAnimation`,
+    `${idleConfig.duration}s`,
+    `steps(${idleConfig.frames}, end)`,
+    `0s`,
+    `infinite`,
+    `normal`,
+    `forwards`,
+  ].join(' ');
+} else {
+  sprite.style.animation = '';
+}
       };
 
 

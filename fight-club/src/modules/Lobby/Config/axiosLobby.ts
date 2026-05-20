@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type { Room } from '../Types/RoomTypes';
 import type { Character, UserCharacter } from '../Types/characterTypes';
-import { error } from 'three';
 import { getLocalCharacterAssets } from '../../../utils/assetMapper';
 
 export type CharacterAssets = {
@@ -40,7 +39,7 @@ export const lobbyApi ={
             });
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -51,7 +50,7 @@ export const lobbyApi ={
             });
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -60,7 +59,7 @@ export const lobbyApi ={
             const res = await lobbyApiAxios.post(`${base_rest_uri}/start-fight/${roomCode}`);
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -89,7 +88,7 @@ export const lobbyApi ={
             console.log('[axiosLobby] Mapped character name:', characterName);
             return getLocalCharacterAssets(characterName);
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -100,7 +99,7 @@ export const lobbyApi ={
             });
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -109,7 +108,7 @@ export const lobbyApi ={
             const res = await lobbyApiAxios.get(`${all_character_rest_uri}/all`);
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -120,7 +119,7 @@ export const lobbyApi ={
             });
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 
@@ -129,7 +128,7 @@ export const lobbyApi ={
             const res = await lobbyApiAxios.get(`${base_rest_uri}/public-rooms`);
             return res.data;
         } catch (err) {
-            handleAxiosError(err);
+            return handleAxiosError(err);
         }
     },
 }  

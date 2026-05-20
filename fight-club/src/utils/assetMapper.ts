@@ -13,7 +13,9 @@ import type { CharacterAssets } from '../modules/Lobby/Config/axiosLobby';
  */
 export const getLocalCharacterAssets = (characterName: string): CharacterAssets => {
   const normalizedName = characterName.toLowerCase().trim();
-  const basePath = `/src/assets/FighterAssets/${normalizedName}`;
+  const basePath = `/FighterAssets/${normalizedName}`;
+
+  console.log('[assetMapper] characterName recibido:', characterName, '→ normalizado:', normalizedName);
 
   return {
     idle_url: `${basePath}/${normalizedName}_IDLE.png`,

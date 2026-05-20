@@ -52,7 +52,6 @@
   /* Propiedades de animación por defecto (para idle y run) */
   animation-name: spriteAnimation;
   animation-duration: var(--animation-duration);
-  animation-timing-function: steps(var(--frames));
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
 

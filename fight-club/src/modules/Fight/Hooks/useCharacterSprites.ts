@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { CharacterAssets } from '../../Lobby/Config/axiosLobby';
 import type { AnimationFrameConfig } from '../types/animation.types';
+import { getSpriteConfig } from '../Config/spriteConfig';
 
 interface SpriteSheetDimensions {
   width: number;
@@ -55,56 +56,68 @@ const BASE_FRAME_DURATION: Record<AnimationType, number> = {
 /**
  * Carga una imagen y obtiene sus dimensiones
  */
-const loadImageDimensions = (url: string): Promise<SpriteSheetDimensions> => {
-  // Verificar cache primero
+const loadImageDimensions = (
+  url: string,
+  animationType?: 'idle' | 'run' | 'attack' | 'hurt'
+): Promise<SpriteSheetDimensions> => {
   const cached = dimensionsCache.get(url);
-  if (cached) {
-    return Promise.resolve(cached);
-  }
+  if (cached) return Promise.resolve(cached);
 
-  // Si ya hay una promesa en curso para esta URL, reutilizarla
   const existingPromise = loadingPromises.get(url);
-  if (existingPromise) {
-    return existingPromise;
-  }
+  if (existingPromise) return existingPromise;
 
   const promise = new Promise<SpriteSheetDimensions>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const width = img.naturalWidth;
       const height = img.naturalHeight;
-      
-      // Asumimos que los frames son cuadrados (ancho = alto de cada frame)
-      const frameHeight = height;
-      const frameWidth = frameHeight;
-      
-      // Calculamos cantidad de frames
-      const frames = Math.round(width / frameWidth);
-      
+
+      // Intentar config manual primero
+      const characterName = url.split('/FighterAssets/')[1]?.split('/')[0] ?? '';
+      const manualConfig = animationType 
+        ? getSpriteConfig(characterName, animationType) 
+        : null;
+
+      let frameWidth: number;
+      let frameHeight: number;
+      let frames: number;
+
+      if (manualConfig) {
+        // Usar config manual exacta
+        frameWidth  = manualConfig.frameWidth;
+        frameHeight = manualConfig.frameHeight;
+        frames      = manualConfig.frames;
+        console.log(`[sprites] Using manual config for ${characterName} ${animationType}:`, manualConfig);
+      } else {
+        // Auto-detectar (frames cuadrados)
+        frames      = Math.round(width / height);
+        frameWidth  = Math.round(width / frames);
+        frameHeight = height;
+        console.log(`[sprites] Auto-detected for ${url}:`, { frames, frameWidth, frameHeight });
+      }
+
+      const sheetWidth = frameWidth * frames;
+
       const dimensions: SpriteSheetDimensions = {
-        width,
+        width: sheetWidth,
         height,
         frameWidth,
         frameHeight,
         frames: Math.max(1, frames),
       };
-      
-      // Guardar en cache
+
       dimensionsCache.set(url, dimensions);
       loadingPromises.delete(url);
-      
-      console.log('[v0] Sprite dimensions detected:', { url, dimensions });
-      
       resolve(dimensions);
     };
-    
+
     img.onerror = () => {
       loadingPromises.delete(url);
       reject(new Error(`Failed to load sprite sheet: ${url}`));
     };
-    
+
     img.src = url;
   });
 
@@ -177,10 +190,10 @@ export const useCharacterSprites = (
       // Cargar todas las animaciones en paralelo
       const loadPromises = animationTypes.map(async (type) => {
         const url = urls[type];
-        if (!url) return;
-
+        
+        if (!url) return;  // ← el check va PRIMERO
         try {
-          const dimensions = await loadImageDimensions(url);
+          const dimensions = await loadImageDimensions(url, type); // ← una sola llamada con type
           newConfigs[type] = createAnimationConfig(
             dimensions,
             type,

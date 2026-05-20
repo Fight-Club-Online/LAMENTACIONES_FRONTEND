@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AnimationFrameConfig } from '../types/animation.types';
+import { getSpriteConfig } from '../Config/spriteConfig';
 
 interface SpriteSheetDimensions {
   width: number;
@@ -35,49 +36,63 @@ const loadingPromises = new Map<string, Promise<SpriteSheetDimensions>>();
 /**
  * Carga una imagen y obtiene sus dimensiones
  */
-const loadImageDimensions = (url: string): Promise<SpriteSheetDimensions> => {
-  // Si ya hay una promesa en curso para esta URL, reutilizarla
+const loadImageDimensions = (
+  url: string,
+  animationType?: 'idle' | 'run' | 'attack' | 'hurt'  // ← agregar parámetro
+): Promise<SpriteSheetDimensions> => {
+  const cached = dimensionsCache.get(url);
+  if (cached) return Promise.resolve(cached);
+
   const existingPromise = loadingPromises.get(url);
-  if (existingPromise) {
-    return existingPromise;
-  }
+  if (existingPromise) return existingPromise;
 
   const promise = new Promise<SpriteSheetDimensions>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const width = img.naturalWidth;
       const height = img.naturalHeight;
-      
-      // Asumimos que los frames son cuadrados (ancho = alto de cada frame)
-      // El frameHeight es el alto total del spritesheet
-      const frameHeight = height;
-      const frameWidth = frameHeight; // Frames cuadrados
-      
-      // Calculamos cantidad de frames
-      const frames = Math.round(width / frameWidth);
-      
+
+      const characterName = url.split('/FighterAssets/')[1]?.split('/')[0] ?? '';
+      const manualConfig = animationType
+        ? getSpriteConfig(characterName, animationType)
+        : null;
+
+      let frameWidth: number;
+      let frameHeight: number;
+      let frames: number;
+
+      if (manualConfig) {
+        frameWidth  = manualConfig.frameWidth;
+        frameHeight = manualConfig.frameHeight;
+        frames      = manualConfig.frames;
+      } else {
+        frames      = Math.round(width / height);
+        frameWidth  = Math.round(width / frames);
+        frameHeight = height;
+      }
+
+      const sheetWidth = frameWidth * frames;
+
       const dimensions: SpriteSheetDimensions = {
-        width,
+        width: sheetWidth,
         height,
         frameWidth,
         frameHeight,
-        frames: Math.max(1, frames), // Mínimo 1 frame
+        frames: Math.max(1, frames),
       };
-      
-      // Guardar en cache
+
       dimensionsCache.set(url, dimensions);
       loadingPromises.delete(url);
-      
       resolve(dimensions);
     };
-    
+
     img.onerror = () => {
       loadingPromises.delete(url);
       reject(new Error(`Failed to load sprite sheet: ${url}`));
     };
-    
+
     img.src = url;
   });
 
@@ -144,7 +159,7 @@ export const useSpriteSheetDetection = (
     setError(null);
 
     try {
-      const dimensions = await loadImageDimensions(url);
+      const dimensions = await loadImageDimensions(url, animationType);
       const frameDuration = BASE_FRAME_DURATION[animationType] || 0.08;
       const duration = dimensions.frames * frameDuration;
 

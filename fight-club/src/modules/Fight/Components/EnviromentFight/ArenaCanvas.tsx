@@ -32,7 +32,12 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
     const gameStateRef = useRef<Fight | null>(null);
     const [characterAssets, setCharacterAssets] = useState<Map<string, CharacterAssets>>(new Map());
 
-    const visualPositionsRef = useRef({
+    const [visualPositions, setVisualPositions] = useState({
+        player1: { x: 100, y: GROUND_Y - CANVAS_CONFIG.FIGHTER_HEIGHT - 40 },
+        player2: { x: CANVAS_CONFIG.WIDTH - 165, y: GROUND_Y - CANVAS_CONFIG.FIGHTER_HEIGHT - 40 },
+    });
+    
+    const lerpPositionsRef = useRef({
         player1: { x: 100, y: GROUND_Y - CANVAS_CONFIG.FIGHTER_HEIGHT - 40 },
         player2: { x: CANVAS_CONFIG.WIDTH - 165, y: GROUND_Y - CANVAS_CONFIG.FIGHTER_HEIGHT - 40 },
     });
@@ -168,7 +173,7 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
             const state = gameStateRef.current;
 
             if (state) {
-                const vp = visualPositionsRef.current;
+                const vp = lerpPositionsRef.current;
 
                 vp.player1.x =
                     (1 - LERP_SPEED) * vp.player1.x +
@@ -185,8 +190,13 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
                 vp.player2.y =
                     (1 - LERP_SPEED) * vp.player2.y +
                     LERP_SPEED * state.player2.posY;
+                    
+                setVisualPositions({
+                    player1: { x: vp.player1.x, y: vp.player1.y },
+                    player2: { x: vp.player2.x, y: vp.player2.y },
+                });               
             }
-
+            
             animationFrameRef.current = requestAnimationFrame(render);
         };
 
@@ -258,7 +268,7 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
                         <div className="absolute inset-0 z-20">
                             <SpriteRenderer
                                 fighter={gameState.player1}
-                                position={visualPositionsRef.current.player1}
+                                position={visualPositions.player1}
                                 slotWidth={slotWidth}
                                 slotHeight={slotHeight}
                                 scale={scale * 2.3}
@@ -270,7 +280,7 @@ const ArenaCanvas: React.FC<Props> = ({ gameState }) => {
 
                             <SpriteRenderer
                                 fighter={gameState.player2}
-                                position={visualPositionsRef.current.player2}
+                                position={visualPositions.player2}
                                 slotWidth={slotWidth}
                                 slotHeight={slotHeight}
                                 scale={scale * 2.3}
