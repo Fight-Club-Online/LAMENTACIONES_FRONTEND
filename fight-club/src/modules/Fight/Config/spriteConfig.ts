@@ -30,23 +30,23 @@ export const SPRITE_CONFIGS: Record<string, ManualSpriteConfig> = {
   // RUN: 1536x96 -> 16 frames de 96px
   // ATTACK: 672x96 -> 7 frames de 96px
   // HURT: 384x96 -> 4 frames de 96px
-  // El sprite del samurai mira hacia la IZQUIERDA por defecto
+  // El sprite del samurai mira hacia la DERECHA por defecto
   samurai: {
     idle:   { frames: 10, frameWidth: 96, frameHeight: 96 },
     run:    { frames: 16, frameWidth: 96, frameHeight: 96 },
     attack: { frames: 7,  frameWidth: 96, frameHeight: 96 },
     hurt:   { frames: 4,  frameWidth: 96, frameHeight: 96 },
-    defaultFacing: 'LEFT',
+    defaultFacing: 'RIGHT',
   },
   // Golem: 720x64
   // 720/8 = 90px de ancho por frame
-  // El sprite del golem mira hacia la IZQUIERDA por defecto
+  // El sprite del golem mira hacia la DERECHA por defecto
   golem: {
     idle:   { frames: 8,  frameWidth: 90, frameHeight: 64 },
     run:    { frames: 10, frameWidth: 90, frameHeight: 64 },
     attack: { frames: 11, frameWidth: 90, frameHeight: 64 },
     hurt:   { frames: 4,  frameWidth: 90, frameHeight: 64 },
-    defaultFacing: 'LEFT',
+    defaultFacing: 'RIGHT',
   },
   // Esqueleto: 768x64
   // Ya tiene frames de 96px, mantenemos
