@@ -12,6 +12,12 @@ export interface ManualSpriteConfig {
    * 'RIGHT' = el sprite mira hacia la derecha
    */
   defaultFacing: 'LEFT' | 'RIGHT';
+  /**
+   * Offset vertical para ajustar la posición del sprite (en pixels).
+   * Valores positivos mueven el sprite hacia abajo.
+   * Útil para alinear los pies de personajes con diferentes alturas.
+   */
+  verticalOffset?: number;
 }
 
 export const SPRITE_CONFIGS: Record<string, ManualSpriteConfig> = {
