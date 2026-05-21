@@ -44,7 +44,10 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
   const assets = characterAssets.get(spriteKey);
   const spriteUrl = getSpriteAssetUrl(assets, fighter.currentAction, isDead);
   const glowColor = getSpriteGlowColor(fighter.currentAction, isDead);
-  const direction = fighter.direction === 'RIGHT' ? 1 : -1;
+  // Los sprites base miran a la IZQUIERDA, entonces:
+  // - direction LEFT (mirar izquierda) = scaleX(1) sin voltear
+  // - direction RIGHT (mirar derecha) = scaleX(-1) voltear horizontalmente
+  const direction = fighter.direction === 'LEFT' ? 1 : -1;
 
   const { getConfig, isLoaded } = useCharacterSprites(assets);
   const detectedConfig = getConfig(animationType);

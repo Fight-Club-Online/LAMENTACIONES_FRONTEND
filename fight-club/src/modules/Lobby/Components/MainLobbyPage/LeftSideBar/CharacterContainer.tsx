@@ -3,6 +3,7 @@ import type { UserCharacter } from '../../../Types/characterTypes';
 import type { CharacterAssets } from '../../../Config/axiosLobby';
 import { lobbyApi } from '../../../Config/axiosLobby';
 import { getUserData } from '../../../Types/localUserData';
+import { SpriteAnimator } from '../../SpriteAnimator';
 
 const AZURE_BACKEND_URL = 'https://lobbyservices-f7dghrebachxetg4.mexicocentral-01.azurewebsites.net';
 
@@ -147,13 +148,14 @@ export const CharacterContainer: React.FC<props>  = ({userCharacters})=>{
                     <div className="absolute inset-0 bg-gradient-to-r from-surface via-transparent to-transparent" />
                 </div>
                 <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-10">
-                    <div
-                        key={characterScreen.character?.characterId}
-                        className="sprite sprite-idle"
-                        style={{
-                            backgroundImage: `url(${characterScreen.assets?.idle_url})`
-                        }}
-                    />
+                    {characterScreen.assets?.idle_url && (
+                        <SpriteAnimator
+                            spriteUrl={characterScreen.assets.idle_url}
+                            characterName={characterScreen.character?.characterName || ''}
+                            animationType="idle"
+                            scale={6}
+                        />
+                    )}
                 </div>
                 <div className="relative z-10 pb-8 pl-8 border-l-4 border-primary-container">
                     <h2 className="font-headline text-5xl font-black uppercase tracking-tighter text-on-surface leading-none mb-2">

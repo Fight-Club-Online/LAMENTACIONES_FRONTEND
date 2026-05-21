@@ -17,13 +17,13 @@ export const SPRITE_CONFIGS: Record<string, ManualSpriteConfig> = {
     attack: { frames: 6, frameWidth: 96,  frameHeight: 84 },
     hurt:   { frames: 4, frameWidth: 96,  frameHeight: 84 },
   },
-  // Samurai: 960x96
-  // Usando 9 frames de 96px (como en mini-proyecto)
+  // Samurai: configuración basada en el mini-proyecto
+  // IDLE usa 9 frames de 96x64 (según el documento de prueba)
   samurai: {
-    idle:   { frames: 9, frameWidth: 96, frameHeight: 96 },
-    run:    { frames: 16, frameWidth: 96, frameHeight: 96 },
-    attack: { frames: 7,  frameWidth: 96, frameHeight: 96 },
-    hurt:   { frames: 4,  frameWidth: 96, frameHeight: 96 },
+    idle:   { frames: 9, frameWidth: 96, frameHeight: 64 },
+    run:    { frames: 14, frameWidth: 128, frameHeight: 64 },
+    attack: { frames: 8,  frameWidth: 84, frameHeight: 64 },
+    hurt:   { frames: 4,  frameWidth: 96, frameHeight: 64 },
   },
   // Golem: 720x64
   // Usando 8 frames de 96px (como en mini-proyecto)
