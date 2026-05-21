@@ -24,29 +24,25 @@ interface SelectCharactersProps {
     onStartFight: () => void;
 }
 
- const defaultCharacter: UserCharacter = {
+const defaultCharacter: UserCharacter = {
     id: "uc-001",
     user: "usuario123",
     character: {
-      characterId: 1,
-      characterLevel: 10,
-      characterName: "Guerrero Arcano",
-      characterHp: "1500",
-      characterATK: "250",
-      characterDEF: "180",
-      characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
+        characterId: 1,
+        characterLevel: 10,
+        characterName: "Guerrero Arcano",
+        characterHp: "1500",
+        characterATK: "250",
+        characterDEF: "180",
+        characterImg: "https://avatars.githubusercontent.com/u/181153854?v=4",
     },
-  };
-
-
+};
 
 // Helper para normalizar estructura de personajes desde el API
 const normalizeCharacter = (char: any): UserCharacter => {
-    // Si viene con estructura anidada, devolverla como está
     if (char.character) {
         return char;
     }
-    // Si viene con datos planos, envolver en estructura UserCharacter
     return {
         id: char.id || "uc-temp",
         user: char.user || "",
@@ -76,7 +72,6 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
 
     // Determinar si este usuario es player1 o player2
     const isPlayer1 = gameState.player1.userId === userId;
-    console.log('isPlayer1', isPlayer1 + ' ' + userId);
     const currentPlayer = isPlayer1 ? gameState.player1 : gameState.player2;
     const opponent = isPlayer1 ? gameState.player2 : gameState.player1;
 
@@ -90,12 +85,12 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
             try {
                 setIsLoadingCharacters(true);
                 const response = await lobbyApi.getUserCharacters(userId);
-                console.log("Personajes cargados:", response)
-                if(response && response.length > 0){
+                console.log("Personajes cargados:", response);
+                
+                if (response && response.length > 0) {
                     const normalizedCharacters = response.map(normalizeCharacter);
                     setCharacters(normalizedCharacters);
                     
-                    // Cargar assets para cada personaje
                     const assetsMap = new Map<number, CharacterAssets>();
                     for (const char of normalizedCharacters) {
                         try {
@@ -113,10 +108,10 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                         }
                     }
                     setCharacterAssets(assetsMap);
-                 }else{
+                } else {
                     console.log('No hay personajes del usuario, usando default');
                     setCharacters([defaultCharacter]);
-                 }
+                }
             } catch (error) {
                 console.error('Error cargando personajes:', error);
                 console.log('Usando personaje por defecto');
@@ -144,7 +139,6 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
     const handleConfirmSelection = () => {
         if (selectedCharacterId === null) return;
         onSelectCharacter(selectedCharacterId);
-        console.log("orpimido")
     };
 
     return (
@@ -177,14 +171,15 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                     key={char.character.characterId}
                                     onClick={() => handleSelectCharacter(char.character.characterId)}
                                     disabled={currentPlayerReady}
-                                    className={`
-                                        relative p-4 rounded-lg border-2 transition-all
-                                        ${selectedCharacterId === char.character.characterId
+                                    className={`relative p-4 rounded-lg border-2 transition-all ${
+                                        selectedCharacterId === char.character.characterId
                                             ? 'border-red-500 bg-red-500/20 scale-105'
                                             : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
-                                        }
-                                        ${currentPlayerReady ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                    `}
+                                    } ${
+                                        currentPlayerReady 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : 'cursor-pointer'
+                                    }`}
                                 >
                                     {/* Sprite del personaje */}
                                     <div className="aspect-square bg-zinc-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
@@ -227,7 +222,7 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                     {!currentPlayerReady && selectedCharacterId !== null && (
                         <button
                             onClick={handleConfirmSelection}
-                            className="mt-6 w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-lg rounded-lg transition-colors"
+                            className="mt-6 w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-lg rounded-lg transition-colors cursor-pointer shadow-lg shadow-red-950/50"
                         >
                             CONFIRMAR SELECCION
                         </button>
@@ -255,10 +250,9 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
 
                     {/* Card del oponente */}
                     <div className="flex-1 flex items-center justify-center">
-                        <div className={`
-                            w-full max-w-xs p-6 rounded-xl border-2 
-                            ${opponent.hasCharacter ? 'border-green-500 bg-green-500/10' : 'border-zinc-700 bg-zinc-900'}
-                        `}>
+                        <div className={`w-full max-w-xs p-6 rounded-xl border-2 ${
+                            opponent.hasCharacter ? 'border-green-500 bg-green-500/10' : 'border-zinc-700 bg-zinc-900'
+                        }`}>
                             {opponent.hasCharacter ? (
                                 <div className="text-center">
                                     <div className="w-32 h-32 mx-auto bg-zinc-800 rounded-lg mb-4 flex items-center justify-center">
@@ -276,7 +270,8 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                     <div className="w-16 h-16 mx-auto border-4 border-zinc-600 border-t-yellow-500 rounded-full animate-spin mb-4" />
                                     <p className="text-zinc-400 text-lg">Esperando seleccion...</p>
                                 </div>
-                            )}
+                            )
+                            }
                         </div>
                     </div>
                 </div>

@@ -48,6 +48,7 @@ export const PublicRoomsSelectorPopUp: React.FC<Props> = ({ rooms }) => {
                             >
                                 <SearchResultPopUp
                                     players={room.currentPlayers}
+                                    box-spectators={room.currentSpectators}
                                     spectators={room.currentSpectators}
                                     status={room.roomState}
                                 />
@@ -66,11 +67,11 @@ export const PublicRoomsSelectorPopUp: React.FC<Props> = ({ rooms }) => {
                                     <button
                                         disabled={isPlayerFull}
                                         onClick={() => JoinWaiting(room.roomCode, 'PLAYER')}
-                                        className={`flex-1 py-2 px-4 rounded-xl font-display font-bold tracking-wider text-sm uppercase transition-all duration-200 
-                                            ${isPlayerFull 
+                                        className={`flex-1 py-2 px-4 rounded-xl font-display font-bold tracking-wider text-sm uppercase transition-all duration-200 ${
+                                            isPlayerFull 
                                                 ? "bg-gray-700/50 text-gray-500 cursor-not-allowed line-through" 
-                                                : "bg-gradient-to-r from-orange-600 to-orange-500 text-white hover:scale-105 shadow-[0_0_15px_rgba(234,88,12,0.4)]"
-                                            }`}
+                                                : "bg-gradient-to-r from-orange-600 to-orange-500 text-white hover:scale-105 shadow-[0_0_15px_rgba(234,88,12,0.4)] cursor-pointer"
+                                        }`}
                                     >
                                         {isPlayerFull ? "Lleno" : "Únete"}
                                     </button>
@@ -81,11 +82,11 @@ export const PublicRoomsSelectorPopUp: React.FC<Props> = ({ rooms }) => {
                                     <button
                                         disabled={isSpectatorFull}
                                         onClick={() => JoinWaiting(room.roomCode, 'SPECTATOR')}
-                                        className={`flex-1 py-2 px-4 rounded-xl font-display font-bold tracking-wider text-sm uppercase transition-all duration-200 border
-                                            ${isSpectatorFull 
+                                        className={`flex-1 py-2 px-4 rounded-xl font-display font-bold tracking-wider text-sm uppercase transition-all duration-200 border ${
+                                            isSpectatorFull 
                                                 ? "border-gray-700 text-gray-500 cursor-not-allowed" 
-                                                : "border-orange-500 text-orange-500 bg-orange-500/10 hover:bg-orange-500 hover:text-white hover:scale-105"
-                                            }`}
+                                                : "border-orange-500 text-orange-500 bg-orange-500/10 hover:bg-orange-500 hover:text-white hover:scale-105 cursor-pointer"
+                                        }`}
                                     >
                                         {isSpectatorFull ? "Lleno" : "Espectador"}
                                     </button>
@@ -97,4 +98,4 @@ export const PublicRoomsSelectorPopUp: React.FC<Props> = ({ rooms }) => {
             )}
         </div>
     );
-}
+};

@@ -5,7 +5,6 @@ type props ={
 }
 
 
-
 export const FooterSelectCharacter: React.FC<props> = ({ onStartFight, bothPlayersReady }) => {
     return (
         <footer className="p-6 border-t border-zinc-800">

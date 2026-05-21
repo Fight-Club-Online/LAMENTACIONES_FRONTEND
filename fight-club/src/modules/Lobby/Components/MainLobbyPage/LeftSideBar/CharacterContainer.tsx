@@ -62,14 +62,12 @@ export const CharacterContainer: React.FC<props>  = ({userCharacters})=>{
                     characters.map(async (char) => {
                         console.log('[DEBUG char crudo]', JSON.stringify(char, null, 2));
                         try {
-                            // Normalizar: el API puede devolver plano o anidado
                             const characterName = (char as any).characterName 
                                 ?? char.character?.characterName 
                                 ?? 'Desconocido';
                             const characterId = (char as any).characterId 
                                 ?? char.character?.characterId;
                                 
-                            // Construir estructura normalizada siempre igual
                             const normalizedChar: UserCharacter = {
                                 id: char.id ?? (char as any).id,
                                 user: char.user ?? (char as any).user ?? '',
