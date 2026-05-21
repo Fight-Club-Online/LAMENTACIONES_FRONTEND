@@ -76,16 +76,6 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
     sprite.style.backgroundPosition = '0 0';
     sprite.style.width = `${frameWidth}px`;
     sprite.style.height = `${frameHeight}px`;
-
-    console.log('[v0] Starting animation:', {
-      url: url.split('/').pop(),
-      frames,
-      frameWidth,
-      frameHeight,
-      totalWidth,
-      frameTime,
-      isOneShot,
-    });
     
     // Resetear frame
     frameRef.current = 0;

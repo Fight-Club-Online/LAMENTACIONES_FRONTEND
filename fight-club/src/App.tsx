@@ -13,6 +13,7 @@ import { WaitingRoomPage } from "./modules/Lobby/pages/WaitingRoomPage.tsx";
 import { FightPage } from "./modules/Fight/pages/FightPage.tsx";
 import { AdminPage } from './modules/Lobby/pages/AdminPage.tsx';
 import { AdminRoute } from "./modules/authentication/Components/ui/AdminRoute.tsx";
+import SpriteTest from "./modules/Fight/pages/SpriteTest.tsx";
 function App() {
   return (
     <BrowserRouter>
@@ -25,6 +26,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/guest" element={<GuestPage />} />
+          <Route path="/sprite-test" element={<SpriteTest />} />
 
           {/* Perfil de Usuario */}
           <Route path="/:username/perfil" element={
