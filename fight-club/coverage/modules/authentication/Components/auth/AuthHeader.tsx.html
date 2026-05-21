@@ -1,0 +1,274 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for modules/authentication/Components/auth/AuthHeader.tsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../../prettify.css" />
+    <link rel="stylesheet" href="../../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">modules/authentication/Components/auth</a> AuthHeader.tsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>5/5</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>2/2</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>5/5</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { motion } from 'framer-motion'
+import { Flame } from 'lucide-react'
+&nbsp;
+export const AuthHeader = () =&gt; {
+  const duration = 1.5;
+  const repeatDelay = 1.5;
+&nbsp;
+  return (
+    &lt;div className="flex flex-col items-center mb-8 sm:mb-12"&gt; {/* Menos margen en móvil */}
+      &lt;div className="relative mb-4 sm:mb-6"&gt;
+        
+        {/* Contenedor del Círculo: w-20 en móvil, w-24 en desktop */}
+        &lt;div className="w-20 h-20 sm:w-24 sm:h-24 bg-acero/90 rounded-full flex items-center justify-center border border-fuego/30 shadow-[0_0_50px_rgba(255,68,0,0.15)] overflow-hidden relative"&gt;
+          
+          {/* LA LLAMA: Tamaño 40 en móvil, 48 en desktop */}
+          &lt;motion.div
+            animate={{ scale: [1, 1.2, 1], x: [0, 8, 0] }}
+            transition={{ duration, repeat: Infinity, repeatDelay, times: [0, 0.2, 1], ease: "easeOut" }}
+          &gt;
+            &lt;Flame className="text-oro w-[40px] h-[40px] sm:w-[48px] sm:h-[48px]" strokeWidth={1.2} /&gt;
+          &lt;/motion.div&gt;
+&nbsp;
+          {/* EL PUÑO */}
+          &lt;motion.div
+            initial={{ x: -90, opacity: 0 }}
+            animate={{ x: [-90, -12, -90], opacity: [0, 1, 0] }}
+            transition={{ duration, repeat: Infinity, repeatDelay, times: [0, 0.2, 1], ease: "anticipate" }}
+            className="absolute left-0 text-fuego drop-shadow-[0_0_20px_rgba(255,68,0,0.5)]"
+          &gt;
+            &lt;svg className="w-[38px] h-[38px] sm:w-[45px] sm:h-[45px]" viewBox="0 0 24 24" fill="currentColor"&gt;
+              &lt;path d="M20.57 14.86L22 13.43V7.14L20.57 5.71H15.43L14 7.14V8.57H12.57V7.14L11.14 5.71H6V14.86L8.57 17.43H15.43L18 14.86V13.43H19.43V14.86H20.57M5.14 14.86H2V10.29H5.14V14.86M11.14 14.86H8.57V10.29H11.14V14.86Z" /&gt;
+              &lt;path d="M14.5 17h-4l-2.5-2.5V6h5.5l1.5 1.5V9h1.5l1.5 1.5v4L16.5 16h-2z" opacity=".2"/&gt;
+            &lt;/svg&gt;
+          &lt;/motion.div&gt;
+        &lt;/div&gt;
+&nbsp;
+        {/* ONDAS DE CHOQUE */}
+        {[0, 0.1, 0.2].map((delay, index) =&gt; (
+          &lt;motion.div
+            key={index}
+            animate={{ scale: [1, 2], opacity: [0, 0.4, 0] }}
+            transition={{ duration: 0.8, repeat: Infinity, repeatDelay: duration + repeatDelay - 0.8, delay: delay + 0.3, ease: "easeOut" }}
+            className="absolute inset-0 rounded-full border border-ceniza/40"
+          /&gt;
+        ))}
+      &lt;/div&gt;
+&nbsp;
+      {/* TEXTO: text-4xl en móvil, text-5xl en desktop */}
+      &lt;motion.div
+        initial={{ opacity: 0, filter: "blur(15px)", scale: 0.9 }}
+        animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
+        transition={{ duration: 1.8, ease: "easeOut" }}
+        className="text-center"
+      &gt;
+        &lt;h1 className="text-4xl sm:text-5xl font-black italic text-ceniza tracking-tighter uppercase"&gt;
+          FIGHT &lt;span className="text-fuego drop-shadow-[0_0_20px_rgba(255,68,0,0.7)]"&gt;CLUB&lt;/span&gt;
+        &lt;/h1&gt;
+        &lt;p className="text-oro/40 text-[7px] sm:text-[9px] tracking-[0.5em] sm:tracking-[0.7em] uppercase font-bold mt-2 sm:mt-3"&gt;
+          Online Battle
+        &lt;/p&gt;
+      &lt;/motion.div&gt;
+    &lt;/div&gt;
+  )
+}</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-05-21T19:21:40.884Z
+            </div>
+        <script src="../../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../../sorter.js"></script>
+        <script src="../../../../block-navigation.js"></script>
+    </body>
+</html>
+    

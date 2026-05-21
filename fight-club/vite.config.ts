@@ -10,4 +10,10 @@ export default defineConfig({
     react(),
     tailwindcss(), 
   ],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.tsx'],
+    globals: true,
+    clearMocks: true,
+  },
 })
