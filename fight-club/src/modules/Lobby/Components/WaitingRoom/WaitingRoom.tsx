@@ -14,7 +14,6 @@ type props={
     isStartingGame: boolean;
 }
 
-
 export const WaitingRoom: React.FC<props> = ({
     roomRequest,
     leave,
@@ -27,7 +26,9 @@ export const WaitingRoom: React.FC<props> = ({
 
     return (
         <div className="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary h-screen flex flex-col overflow-hidden">
+            
             <WaitingRoomHeader spectatorsNumber={roomRequest.currentSpectators} leave={leave}/>
+            
             <main className="flex-1 flex flex-col relative mt-16 min-h-0">
 
                 <div className="absolute inset-0 z-20 flex justify-center pointer-events-none hidden md:flex">
@@ -41,21 +42,20 @@ export const WaitingRoom: React.FC<props> = ({
                         </div> 
                     </div>
        
-
                     {
                         playerList.map((p) => (
-                        <PlayerContainer key={p.userId} player={p} />
+                            <PlayerContainer key={p.userId} player={p} />
                         ))
                     }
 
                     {
                         playerList.length === 1 && <PlayerContainer key="empty-slot" />
                     }
-
-    
                 </div>
             </main>
+            
             <PreFooterWaitingBar roomCode={roomRequest.roomCode} />
+            
             <BottonWaitingBar 
                 roomCode={roomRequest.roomCode}
                 isHost={isHost}

@@ -3,16 +3,14 @@ import { useCreationPublicRoom } from '../../Hooks/useCreationPublicRoom';
 import { useGetPublicRooms } from '../../Hooks/useGetPublicRooms';
 import type { Room } from '../../Types/RoomTypes';
 
-
-
 type Props = {
     setBottomPanel: (bottomPanel: boolean | undefined) => void;
     setRooms: (r: Room[]) => void;
 }
 
-export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
-    const {createPublicRoom} = useCreationPublicRoom();
-    const {rooms,refresh} = useGetPublicRooms();
+export const SelectionPopUp: React.FC<Props> = ({ setBottomPanel, setRooms }) => {
+    const { createPublicRoom } = useCreationPublicRoom();
+    const { rooms, refresh } = useGetPublicRooms();
 
     useEffect(() => {
         if (rooms) {
@@ -20,12 +18,10 @@ export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
         }
     }, [rooms, setRooms]); 
 
-
-    const seePublicRooms = () =>{
+    const seePublicRooms = () => {
         refresh();
         setBottomPanel(true);
-    }
-
+    };
 
     return (
         <div className="flex flex-col items-center gap-3">
@@ -36,6 +32,7 @@ export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
 
             <div className="flex items-center gap-3">
                 
+                {/* BOTÓN ÚNETE */}
                 <button
                     onClick={seePublicRooms}
                     className={`
@@ -44,7 +41,7 @@ export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
                         h-14 px-6
                         flex items-center justify-center
                         transition-all active:scale-[0.98]
-                        cursor-pointer
+                        cursor-pointer !cursor-pointer
                         kinetic-gradient-fuego
                         py-2 md:py-3
                         font-headline font-bold
@@ -55,13 +52,14 @@ export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
                         rounded-[14px] md:rounded-[18px]
                     `}
                 >
-                    <span className="relative z-10 font-label font-black text-on-primary-container text-sm tracking-[0.2em] uppercase">
+                    <span className="relative z-10 font-label font-black text-on-primary-container text-sm tracking-[0.2em] uppercase pointer-events-none">
                         Unete-
                     </span>
                 </button>
 
                 <span className="text-white font-bold">|</span>
 
+                {/* BOTÓN CRÉALA */}
                 <button
                     onClick={createPublicRoom}
                     className={`
@@ -70,7 +68,7 @@ export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
                         h-14 px-6
                         flex items-center justify-center
                         transition-all active:scale-[0.98]
-                        cursor-pointer
+                        cursor-pointer !cursor-pointer
                         kinetic-gradient-fuego
                         py-2 md:py-3
                         font-headline font-bold
@@ -81,7 +79,7 @@ export const SelectionPopUp: React.FC<Props> = ({setBottomPanel,setRooms}) => {
                         rounded-[14px] md:rounded-[18px]
                     `}
                 >
-                    <span className="relative z-10 font-label font-black text-on-primary-container text-sm tracking-[0.2em] uppercase">
+                    <span className="relative z-10 font-label font-black text-on-primary-container text-sm tracking-[0.2em] uppercase pointer-events-none">
                         Creala
                     </span>
                 </button>
