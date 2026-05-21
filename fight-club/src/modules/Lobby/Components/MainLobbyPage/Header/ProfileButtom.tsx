@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUserData } from '../../../Types/localUserData';
 
 type props = {
     userName: string;
@@ -8,15 +9,24 @@ type props = {
 
 export const ProfileButton: React.FC<props> = ({userName, avatarURL}) => {
     const navigate = useNavigate();
+    const userData = getUserData();
 
     const isValidUrl = avatarURL?.startsWith('http') || avatarURL?.startsWith('data:');
     const imgSrc = isValidUrl
         ? avatarURL
         : `https://api.dicebear.com/7.x/pixel-art/svg?seed=${userName}`;
 
+    const handleProfileClick = () => {
+        if (userData?.role === 'ADMIN') {
+            navigate('/admin/dashboard');
+        } else {
+            navigate(`/${userName}/perfil`);
+        }
+    };
+
     return(
         <div 
-            onClick={() => navigate(`/${userName}/perfil`)}
+            onClick={handleProfileClick}
             className="flex items-center gap-4 cursor-pointer group">
             
             <button className="relative">
@@ -33,6 +43,11 @@ export const ProfileButton: React.FC<props> = ({userName, avatarURL}) => {
                 <span className="font-headline text-sm font-bold tracking-widest uppercase text-on-surface">
                     {userName}
                 </span>
+                {userData?.role === 'ADMIN' && (
+                    <span className="text-[9px] font-black uppercase tracking-widest text-orange-500/70">
+                        Admin
+                    </span>
+                )}
             </div>
         </div>
     );

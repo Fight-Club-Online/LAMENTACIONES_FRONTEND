@@ -14,6 +14,7 @@ import { FightPage } from "./modules/Fight/pages/FightPage.tsx";
 import { AdminPage } from './modules/Lobby/pages/AdminPage.tsx';
 import { AdminRoute } from "./modules/authentication/Components/ui/AdminRoute.tsx";
 import SpriteTest from "./modules/Fight/pages/SpriteTest.tsx";
+import { AdminDashboard } from "./modules/Lobby/Components/admin/AdminDashboard.tsx";
 function App() {
   return (
     <BrowserRouter>
@@ -42,6 +43,12 @@ function App() {
             <PrivateRoute>
               <LobbyPage />
             </PrivateRoute>
+          } />
+
+          <Route path="/admin/dashboard" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           } />
 
           <Route path="/admin" element={

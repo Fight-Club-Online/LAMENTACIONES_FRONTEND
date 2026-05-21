@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     Shield, Ban, Clock, FileText, MessageSquare,
     AlertTriangle, CheckCircle, XCircle, ChevronRight,
-    LogOut, Bell, Eye, Trash2, RefreshCw, Search,
-    Flag, Users, Activity, BarChart2
+    Bell, Eye, Trash2, RefreshCw, Search,
+    Flag, Users, Activity, BarChart2, Mic, MessageCircle
 } from 'lucide-react';
 import { LobbyHeader } from '../Components/MainLobbyPage/Header/LobbyHeader';
 import '../styles/index.css';
@@ -59,8 +59,8 @@ interface FlaggedMessage {
     username?: string;
     content: string;
     timestamp: string;
-    source?: string;   // agregar
-    count?: number;    // agregar
+    source?: string;
+    count?: number;
     filtered: boolean;
     flagged: boolean;
 }
@@ -328,6 +328,12 @@ const ReportsPanel = () => {
                                         Por: <span className="text-white/50">{rep.reporterUsername}</span>
                                     </p>
                                 )}
+                                {/* FIX 3: mostrar fightId */}
+                                {rep.fightId && (
+                                    <p className="text-[9px] text-white/30 uppercase tracking-widest">
+                                        Combate: <span className="text-orange-400/70 font-mono text-[8px]">{rep.fightId}</span>
+                                    </p>
+                                )}
                                 {rep.description && <p className="text-[9px] text-white/20 mt-1 truncate">{rep.description}</p>}
                             </div>
                             <div className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${rep.reportStatus === 'PENDING' ? 'bg-orange-500/20 text-orange-400' :
@@ -424,13 +430,27 @@ const ChatPanel = () => {
                             <AlertTriangle size={14} className="text-red-400 shrink-0 mt-0.5" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs text-white/80 leading-relaxed">{msg.content}</p>
-                                <div className="flex gap-3 mt-1">
+                                {/* FIX 4: mostrar source con badge de color */}
+                                <div className="flex gap-3 mt-1 items-center flex-wrap">
                                     <span className="text-[8px] text-white/20 uppercase tracking-widest">
                                         Sender: {msg.userId || msg.username}
                                     </span>
                                     {msg.fightId && (
                                         <span className="text-[8px] text-orange-400/50 uppercase tracking-widest">
                                             Fight: {msg.fightId}
+                                        </span>
+                                    )}
+                                    {msg.source && (
+                                        <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                                            msg.source === 'VOICE'
+                                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/20'
+                                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/20'
+                                        }`}>
+                                            {msg.source === 'VOICE'
+                                                ? <Mic size={8} />
+                                                : <MessageCircle size={8} />
+                                            }
+                                            {msg.source}
                                         </span>
                                     )}
                                 </div>
@@ -574,26 +594,16 @@ export const AdminPage: React.FC = () => {
 
             <main className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-8">
 
-                {/* Header */}
-                <div className="flex items-start justify-between border-b border-white/5 pb-6">
-                    <div>
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-orange-500/80">
-                            Panel de Control
-                        </span>
-                        <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white mt-1">
-                            Administración
-                        </h1>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/lobby')}
-                            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white transition-all">
-                            ← Lobby
-                        </button>
-                        <button onClick={() => { localStorage.clear(); navigate('/login'); }}
-                            className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-400 transition-all">
-                            <LogOut size={12} /> Salir
-                        </button>
-                    </div>
+                {/* FIX 1: header sin botones "← Lobby" y "Salir" — la navegación
+                    ya existe en LobbyHeader (profile click → /admin, y los iconos
+                    de friends/notifs/settings). Solo queda el título. */}
+                <div className="border-b border-white/5 pb-6">
+                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-orange-500/80">
+                        Panel de Control
+                    </span>
+                    <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white mt-1">
+                        Administración
+                    </h1>
                 </div>
 
                 {/* Stats overview */}
