@@ -43,6 +43,13 @@ interface UseCharacterSpritesResult {
 const dimensionsCache = new Map<string, SpriteSheetDimensions>();
 const loadingPromises = new Map<string, Promise<SpriteSheetDimensions>>();
 
+// Exportar funcion para limpiar cache (util para debug)
+export const clearSpriteCache = () => {
+  console.log('[v0] Clearing sprite cache');
+  dimensionsCache.clear();
+  loadingPromises.clear();
+};
+
 /**
  * Duración base por tipo de animación (segundos por frame)
  */

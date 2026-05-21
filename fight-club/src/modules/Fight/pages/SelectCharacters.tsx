@@ -5,6 +5,7 @@ import type { CharacterAssets } from '../../Lobby/Config/axiosLobby';
 import { lobbyApi } from '../../Lobby/Config/axiosLobby';
 import { FooterSelectCharacter } from '../Components/SelectCharacter/footerSC';
 import { HeaderSelectCharacter } from '../Components/SelectCharacter/headerSC';
+import { SpriteAnimator } from '../../Lobby/Components/SpriteAnimator';
 import '../styles/select-characters.css';
 
 const AZURE_BACKEND_URL = 'https://lobbyservices-f7dghrebachxetg4.mexicocentral-01.azurewebsites.net';
@@ -184,11 +185,11 @@ export const SelectCharacters: React.FC<SelectCharactersProps> = ({
                                     {/* Sprite del personaje */}
                                     <div className="aspect-square bg-zinc-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                                         {characterAssets.get(char.character.characterId)?.idle_url ? (
-                                            <div
-                                                className="sprite-select sprite-select-idle"
-                                                style={{
-                                                    backgroundImage: `url(${characterAssets.get(char.character.characterId)?.idle_url})`
-                                                }}
+                                            <SpriteAnimator
+                                                spriteUrl={characterAssets.get(char.character.characterId)!.idle_url!}
+                                                characterName={char.character.characterName}
+                                                animationType="idle"
+                                                scale={2}
                                             />
                                         ) : (
                                             <span className="text-4xl text-zinc-600">?</span>
