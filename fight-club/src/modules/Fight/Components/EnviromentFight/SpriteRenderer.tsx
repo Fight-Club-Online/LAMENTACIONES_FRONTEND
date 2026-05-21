@@ -7,6 +7,7 @@ import {
   getSpriteAssetUrl,
   getSpriteGlowColor,
 } from '../../utils/spriteUtils';
+import { getSpriteDefaultFacing } from '../../Config/spriteConfig';
 
 interface SpriteRendererProps {
   fighter: Fighter;
@@ -44,10 +45,26 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
   const assets = characterAssets.get(spriteKey);
   const spriteUrl = getSpriteAssetUrl(assets, fighter.currentAction, isDead);
   const glowColor = getSpriteGlowColor(fighter.currentAction, isDead);
-  // Los sprites base miran a la IZQUIERDA, entonces:
-  // - direction LEFT (mirar izquierda) = scaleX(1) sin voltear
-  // - direction RIGHT (mirar derecha) = scaleX(-1) voltear horizontalmente
-  const direction = fighter.direction === 'LEFT' ? 1 : -1;
+  
+  // Obtener la dirección predeterminada del sprite del personaje
+  const characterName = fighter.characterName || spriteKey;
+  const defaultFacing = getSpriteDefaultFacing(characterName);
+  
+  // Calcular el scaleX basado en la dirección del fighter y la dirección predeterminada del sprite
+  // Si el sprite mira a la IZQUIERDA por defecto:
+  //   - direction LEFT = scaleX(1) sin voltear
+  //   - direction RIGHT = scaleX(-1) voltear
+  // Si el sprite mira a la DERECHA por defecto:
+  //   - direction LEFT = scaleX(-1) voltear
+  //   - direction RIGHT = scaleX(1) sin voltear
+  const direction = (() => {
+    if (defaultFacing === 'LEFT') {
+      return fighter.direction === 'LEFT' ? 1 : -1;
+    } else {
+      // defaultFacing === 'RIGHT'
+      return fighter.direction === 'RIGHT' ? 1 : -1;
+    }
+  })();
 
   const { getConfig, isLoaded } = useCharacterSprites(assets);
   const detectedConfig = getConfig(animationType);
