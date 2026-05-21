@@ -7,7 +7,7 @@ import {
   getSpriteAssetUrl,
   getSpriteGlowColor,
 } from '../../utils/spriteUtils';
-import { getSpriteDefaultFacing } from '../../Config/spriteConfig';
+import { getSpriteDefaultFacing, getSpriteVerticalOffset } from '../../Config/spriteConfig';
 
 interface SpriteRendererProps {
   fighter: Fighter;
@@ -49,6 +49,7 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
   // Obtener la dirección predeterminada del sprite del personaje
   const characterName = fighter.characterName || spriteKey;
   const defaultFacing = getSpriteDefaultFacing(characterName);
+  const verticalOffset = getSpriteVerticalOffset(characterName);
   
   // Calcular el scaleX basado en la dirección del fighter y la dirección predeterminada del sprite
   // Si el sprite mira a la IZQUIERDA por defecto:
@@ -143,11 +144,11 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
 
     const element = slotRef.current;
     element.style.left = `${(position.x / canvasWidth) * 100}%`;
-    element.style.top = `${((position.y - 10) / canvasHeight) * 100}%`;
+    element.style.top = `${((position.y - 10 + verticalOffset) / canvasHeight) * 100}%`;
     element.style.width = `${(slotWidth / canvasWidth) * 100}%`;
     element.style.height = `${(slotHeight / canvasHeight) * 100}%`;
     element.style.opacity = isDead ? '0.9' : '1';
-  }, [position.x, position.y, slotWidth, slotHeight, canvasWidth, canvasHeight, isDead]);
+  }, [position.x, position.y, slotWidth, slotHeight, canvasWidth, canvasHeight, isDead, verticalOffset]);
 
   // Manejar cambios de animacion
   useEffect(() => {

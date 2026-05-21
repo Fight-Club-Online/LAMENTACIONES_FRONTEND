@@ -12,6 +12,7 @@ export interface ManualSpriteConfig {
    * 'RIGHT' = el sprite mira hacia la derecha
    */
   defaultFacing: 'LEFT' | 'RIGHT';
+  verticalOffset?: number;
 }
 
 export const SPRITE_CONFIGS: Record<string, ManualSpriteConfig> = {
@@ -24,6 +25,7 @@ export const SPRITE_CONFIGS: Record<string, ManualSpriteConfig> = {
     attack: { frames: 6, frameWidth: 96,  frameHeight: 84 },
     hurt:   { frames: 4, frameWidth: 96,  frameHeight: 84 },
     defaultFacing: 'RIGHT',
+    verticalOffset: 50,
   },
   // Samurai: basado en dimensiones reales de los archivos
   // IDLE: 960x96 -> 10 frames de 96px
@@ -89,4 +91,9 @@ export const getSpriteConfig = (
 export const getSpriteDefaultFacing = (characterName: string): 'LEFT' | 'RIGHT' => {
   const name = characterName.toLowerCase().trim();
   return SPRITE_CONFIGS[name]?.defaultFacing ?? 'LEFT';
+};
+
+export const getSpriteVerticalOffset = (characterName: string): number => {
+  const name = characterName.toLowerCase().trim();
+  return SPRITE_CONFIGS[name]?.verticalOffset ?? 0;
 };

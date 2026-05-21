@@ -56,7 +56,7 @@ export const clearSpriteCache = () => {
 const BASE_FRAME_DURATION: Record<AnimationType, number> = {
   idle: 0.08,    // 80ms por frame - ritmo relajado
   run: 0.045,    // 45ms por frame - más rápido
-  attack: 0.009,  // 10ms por frame - velocidad media-rápida
+  attack: 0.05,  // 10ms por frame - velocidad media-rápida
   hurt: 0.1,     // 100ms por frame - un poco más lento para que se note
 };
 
