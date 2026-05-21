@@ -1,75 +1,77 @@
-import '@testing-library/jest-dom/vitest';
-import React from 'react';
-import { afterEach, vi } from 'vitest';
-
-const motionProps = new Set([
-  'initial',
-  'animate',
-  'transition',
-  'exit',
-  'variants',
-  'whileHover',
-  'whileTap',
-  'whileFocus',
-  'drag',
-  'dragConstraints',
-  'dragElastic',
-  'layout',
-]);
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import React from 'react'
+import { afterEach, vi } from 'vitest'
 
 vi.mock('framer-motion', () => {
-  const createMotionComponent = (tag: string) =>
-    React.forwardRef<any, any>(({ children, ...props }, ref) => {
-      const domProps = Object.fromEntries(
-        Object.entries(props).filter(([key]) => !motionProps.has(key))
-      );
-      return React.createElement(tag, { ref, ...domProps }, children);
-    });
+  const motion = new Proxy({}, {
+    get: (_target, tag: string) => {
+      return ({ children, ...props }: any) => React.createElement(tag, props, children)
+    },
+  })
 
-  const motion = new Proxy(
-    {},
-    {
-      get: (_target, tag: string) => createMotionComponent(tag),
-    }
-  );
-
-  return { motion };
-});
+  return {
+    motion,
+    AnimatePresence: ({ children }: any) => React.createElement(React.Fragment, null, children),
+  }
+})
 
 vi.mock('@react-oauth/google', () => ({
-  GoogleLogin: ({ onSuccess }: any) => (
-    <button
-      type="button"
-      data-testid="google-login"
-      onClick={() => onSuccess?.({ credential: 'google-test-token' })}
-    >
-      Google
-    </button>
+  GoogleLogin: ({ onSuccess }: any) => React.createElement(
+    'button',
+    {
+      type: 'button',
+      'data-testid': 'google-login',
+      onClick: () => onSuccess?.({ credential: 'mock-credential' }),
+    },
+    'Google Login'
   ),
-}));
+}))
 
-vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
-vi.stubGlobal('cancelAnimationFrame', vi.fn());
+const canvasContextMock = {
+  clearRect: vi.fn(),
+  fillRect: vi.fn(),
+  drawImage: vi.fn(),
+  save: vi.fn(),
+  restore: vi.fn(),
+  createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+  beginPath: vi.fn(),
+  closePath: vi.fn(),
+  fill: vi.fn(),
+  stroke: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  arc: vi.fn(),
+  fillText: vi.fn(),
+  measureText: vi.fn(() => ({ width: 0 })),
+  setTransform: vi.fn(),
+  translate: vi.fn(),
+  rotate: vi.fn(),
+  scale: vi.fn(),
+  rect: vi.fn(),
+  globalAlpha: 1,
+  filter: 'none',
+  fillStyle: '#000',
+  strokeStyle: '#000',
+}
 
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  value: vi.fn(() => canvasContextMock),
+})
+
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  value: vi.fn(),
   configurable: true,
-  value: vi.fn(() => ({
-    clearRect: vi.fn(),
-    fillRect: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    drawImage: vi.fn(),
-    createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-    beginPath: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    stroke: vi.fn(),
-    globalAlpha: 1,
-    fillStyle: '',
-    filter: '',
-  })),
-});
+})
+
+if (!window.requestAnimationFrame) {
+  window.requestAnimationFrame = ((callback: FrameRequestCallback) => window.setTimeout(() => callback(Date.now()), 0)) as unknown as typeof requestAnimationFrame
+}
+
+if (!window.cancelAnimationFrame) {
+  window.cancelAnimationFrame = ((handle: number) => window.clearTimeout(handle)) as unknown as typeof cancelAnimationFrame
+}
 
 afterEach(() => {
-  vi.clearAllMocks();
-});
+  cleanup()
+})
