@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for modules/Lobby/Components/MainLobbyPage/RigthSideBar/JoinPublicButton.tsx</title>
+    <title>Code coverage report for modules/Lobby/Components/WaitingRoom/PreFooter/PreFooterWaitingBar.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../../../prettify.css" />
     <link rel="stylesheet" href="../../../../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../../index.html">All files</a> / <a href="index.html">modules/Lobby/Components/MainLobbyPage/RigthSideBar</a> JoinPublicButton.tsx</h1>
+        <h1><a href="../../../../../index.html">All files</a> / <a href="index.html">modules/Lobby/Components/WaitingRoom/PreFooter</a> PreFooterWaitingBar.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/3</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -76,58 +76,31 @@
 <a name='L11'></a><a href='#L11'>11</a>
 <a name='L12'></a><a href='#L12'>12</a>
 <a name='L13'></a><a href='#L13'>13</a>
-<a name='L14'></a><a href='#L14'>14</a>
-<a name='L15'></a><a href='#L15'>15</a>
-<a name='L16'></a><a href='#L16'>16</a>
-<a name='L17'></a><a href='#L17'>17</a>
-<a name='L18'></a><a href='#L18'>18</a>
-<a name='L19'></a><a href='#L19'>19</a>
-<a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a>
-<a name='L22'></a><a href='#L22'>22</a>
-<a name='L23'></a><a href='#L23'>23</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L14'></a><a href='#L14'>14</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React,{useState} from 'react';
-import { PublicRoomPopUp } from '../../PublicRoomPopUp/PublicRoomPop';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from 'react';
+import { LobbyCode } from './LobbyCode';
 &nbsp;
-export const JoinPublicButton: React.FC = () =&gt; {
-    const [isOpen, setIsOpen] = useState(false);
+type props={
+    roomCode : string;
+}
 &nbsp;
-&nbsp;
-    return (
-        &lt;&gt;
-          &lt;button onClick={() =&gt; { setIsOpen(true) }}  className="group relative flex items-center justify-between p-6 bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 active:scale-[0.98] border-l-0 hover:border-l-[6px] border-secondary-container shadow-xl overflow-hidden rounded-[18px] cursor-pointer"&gt;
-            &lt;div className="flex flex-col items-start z-1"&gt;
-                &lt;span className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface"&gt;Sala publica&lt;/span&gt;
-                &lt;span className="text-[10px] text-stone-500 font-body mt-1 uppercase tracking-widest"&gt;Entra a una sala publica&lt;/span&gt;
-            &lt;/div&gt;               
-            &lt;span className="material-symbols-outlined text-stone-700 group-hover:text-secondary text-4xl transition-colors" data-icon="planet"&gt;planet&lt;/span&gt;
-        &lt;/button&gt;
-        {
-            isOpen &amp;&amp; &lt;PublicRoomPopUp <span class="fstat-no" title="function not covered" >onClose={() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etIsOpen(false)}</span> /&gt;
-        }
-        &lt;/&gt;
-      
+export const PreFooterWaitingBar : React.FC&lt;props&gt; = ({roomCode}) =&gt;{
+    return(
+        &lt;div className="fixed bottom-24 left-0 w-full z-40 px-8 flex flex-col items-center gap-6 pointer-events-none"&gt;
+            &lt;LobbyCode roomCode={roomCode} /&gt;
+        &lt;/div&gt;
     );
 }</pre></td></tr></table></pre>
 

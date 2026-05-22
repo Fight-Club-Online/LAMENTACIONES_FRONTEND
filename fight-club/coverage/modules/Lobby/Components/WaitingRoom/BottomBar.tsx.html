@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for modules/Lobby/Components/PrivateRoomPopUp/InputSectionPop.tsx</title>
+    <title>Code coverage report for modules/Lobby/Components/WaitingRoom/BottomBar.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../../prettify.css" />
     <link rel="stylesheet" href="../../../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">modules/Lobby/Components/PrivateRoomPopUp</a> InputSectionPop.tsx</h1>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">modules/Lobby/Components/WaitingRoom</a> BottomBar.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/15</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">30% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/10</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/15</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -107,13 +107,7 @@
 <a name='L42'></a><a href='#L42'>42</a>
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
-<a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a>
-<a name='L47'></a><a href='#L47'>47</a>
-<a name='L48'></a><a href='#L48'>48</a>
-<a name='L49'></a><a href='#L49'>49</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L45'></a><a href='#L45'>45</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -124,27 +118,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -159,53 +132,68 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, type RefObject } from "react";
-import { useRequestRoomState } from "../../Hooks/useRequestRoomState";
-import type { Room } from "../../Types/RoomTypes";
-import { error } from "three";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from 'react';
+import { StartGameButton } from './PreFooter/StartGameButton';
 &nbsp;
-type props = {
-    findMatch? : boolean;
-    setBottomPanel: (boolean:boolean) =&gt;void;
-    formRef : RefObject&lt;HTMLFormElement | null&gt;;
-    setRoom : (room : Room | null) =&gt; void;
+type props={
+    roomCode: string;
+    isHost: boolean;
+    onStartGame: () =&gt; Promise&lt;{ success: boolean; error?: string }&gt;;
+    isStartingGame: boolean;
 }
+  
+export const BottonWaitingBar: React.FC&lt;props&gt; = ({
+    roomCode,
+    isHost,
+    onStartGame,
+    isStartingGame
+}) =&gt; {
+    return (
+        &lt;nav className="fixed bottom-0 left-0 w-full z-50 flex justify-between items-center h-16 md:h-20 px-2 md:px-4 bg-[#16130f] border-t border-[#39342f]/30"&gt;
+            &lt;button className="w-20 md:w-28 flex flex-col items-center justify-center text-[#5d4038] py-2 transition-transform active:scale-90 hover:text-orange-500 hover:bg-stone-900 cursor-pointer !cursor-pointer"&gt;
+                &lt;span className="material-symbols-outlined text-xl md:text-2xl pointer-events-none select-none"&gt;
+                    group
+                &lt;/span&gt;
+                &lt;span className="font-['Space_Grotesk'] text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1 pointer-events-none select-none"&gt;
+                    Espectadores
+                &lt;/span&gt;
+            &lt;/button&gt;
 &nbsp;
-export const InputSectionPopUp :React.FC&lt;props&gt; = ({findMatch, setBottomPanel,formRef,setRoom}) =&gt;{
-    const [roomCode, setRoomCode] = useState("");
-    const  {room, error} = useRequestRoomState({code:roomCode})
-    const MATCH_FOUND_EMOJI =   findMatch === undefined ? "search" : (<span class="branch-1 cbranch-no" title="branch not covered" >!error ? "verified" : "cancel");</span>
-    const MATCH_FOUND_MESSAGE =  findMatch === undefined ? "Buscar" : (<span class="branch-1 cbranch-no" title="branch not covered" >!error ? "Encontrada" : "No existe");</span>
-&nbsp;
-    const asignarRoom =  (room:Room | null)=&gt;{
-        setRoom(room);
-    }
-&nbsp;
-    const handleSubmit = (e: React.FormEvent&lt;HTMLFormElement&gt;) =&gt; {
-       e.preventDefault();
-       if (room) {           
-        setBottomPanel(true);
-        asignarRoom(room);
-    } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-<span class="cstat-no" title="statement not covered" >        setBottomPanel(false); </span>
-    }
-    
-    };
-&nbsp;
-    return(
-        &lt;div className="space-y-4 "&gt;
-            &lt;label className="font-label text-xs font-bold tracking-[0.15em] text-on-surface-variant uppercase "&gt;Ingresa el codigo de la sala&lt;/label&gt;
-            &lt;div className="relative group rounded-r-[14px] md:rounded-r-[18px]"&gt;
-                &lt;div className="absolute left-0 top-0 bottom-0 w-1 bg-primary group-focus-within:w-2 transition-all "&gt;&lt;/div&gt;
-                &lt;form ref={formRef} onSubmit={handleSubmit}&gt;
-                    &lt;input value={roomCode}  onChange={(e) =&gt; setRoomCode(e.target.value)} className="w-full bg-surface-container-highest border-none text-on-surface font-label text-xl tracking-widest px-6 py-5 focus:ring-0 focus:outline-none placeholder:text-surface-container-highest/10 placeholder:opacity-30 rounded-r-[14px] md:rounded-r-[18px]" placeholder="XJ9-KINETIC-00" type="text"/&gt;
-                &lt;/form&gt;
-                &lt;div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2"&gt;
-                    &lt;span className="material-symbols-outlined text-primary" data-weight="fill"&gt;{MATCH_FOUND_EMOJI}&lt;/span&gt;
-                    &lt;span className="font-label text-xs text-primary font-bold"&gt;{MATCH_FOUND_MESSAGE}&lt;/span&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
+            {isHost &amp;&amp; (
+                &lt;StartGameButton 
+                    onStartGame={onStartGame}
+                    isStartingGame={isStartingGame}
+                /&gt;
+            )}
+ 
+            &lt;button className="w-20 md:w-28 flex flex-col items-center justify-center text-[#5d4038] py-2 transition-transform active:scale-90 hover:text-orange-500 hover:bg-stone-900 cursor-pointer !cursor-pointer"&gt;
+                &lt;span className="material-symbols-outlined text-xl md:text-2xl pointer-events-none select-none"&gt;
+                    bolt
+                &lt;/span&gt;
+                &lt;span className="font-['Space_Grotesk'] text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1 pointer-events-none select-none"&gt;
+                    Listo
+                &lt;/span&gt;
+            &lt;/button&gt;
+        &lt;/nav&gt;
     );
 }</pre></td></tr></table></pre>
 
@@ -214,7 +202,7 @@ export const InputSectionPopUp :React.FC&lt;props&gt; = ({findMatch, setBottomPa
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-21T19:21:40.884Z
+                at 2026-05-22T02:26:58.717Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

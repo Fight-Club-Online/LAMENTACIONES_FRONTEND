@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for modules/authentication/services/profileService.ts</title>
+    <title>Code coverage report for modules/Fight/styles/fight-sprites.css</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../prettify.css" />
     <link rel="stylesheet" href="../../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../index.html">All files</a> / <a href="index.html">modules/authentication/services</a> profileService.ts</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">modules/Fight/styles</a> fight-sprites.css</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.66% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/6</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.66% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/6</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
@@ -84,56 +84,89 @@
 <a name='L19'></a><a href='#L19'>19</a>
 <a name='L20'></a><a href='#L20'>20</a>
 <a name='L21'></a><a href='#L21'>21</a>
-<a name='L22'></a><a href='#L22'>22</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import authApi from '../Config/axios';
-import type { UserProfile, UserStats } from '../types/dashboard.types';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Sistema de animaciones de sprites
+ * La animacion ahora se controla via JavaScript (setInterval)
+ * CSS solo maneja posicionamiento y estilos visuales
+ */
 &nbsp;
-export const DashboardService = {
-    getDashboardData: <span class="fstat-no" title="function not covered" >async (u</span>serId: string) =&gt; {
-        const [profRes, statsRes] = <span class="cstat-no" title="statement not covered" >await Promise.allSettled([</span>
-            authApi.get&lt;UserProfile&gt;(`/user-profile/${userId}`),
-            authApi.get&lt;UserStats&gt;(`/api/v1/stats/${userId}`)
-        ]);
+.fight-sprite-slot {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: left, top, width, height, opacity;
+}
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        return {</span>
-            profile: profRes.status === 'fulfilled' ? profRes.value.data : null,
-            stats: statsRes.status === 'fulfilled' ? statsRes.value.data : null
-        };
-    },
+/**
+ * Sprite contenedor
+ * Las dimensiones y background-position se controlan via JavaScript
+ */
+.fight-sprite-sheet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  
+  /* Ocultar overflow para mostrar solo 1 frame */
+  overflow: hidden;
 &nbsp;
-    updateProfile: <span class="fstat-no" title="function not covered" >async (u</span>serId: string, newData: Partial&lt;UserProfile&gt;) =&gt; {
-<span class="cstat-no" title="statement not covered" >        await authApi.patch(`/user-profile/${userId}`, newData);</span>
-        const response = <span class="cstat-no" title="statement not covered" >await authApi.get&lt;UserProfile&gt;(`/user-profile/${userId}`);</span>
-<span class="cstat-no" title="statement not covered" >        return response.data; </span>
-    }
-};</pre></td></tr></table></pre>
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform-origin: center center;
+  will-change: transform, filter, background-position, background-image;
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-21T19:21:40.884Z
+                at 2026-05-22T02:26:58.717Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

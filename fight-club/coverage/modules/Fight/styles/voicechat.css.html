@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for modules/Lobby/Components/MainLobbyPage/RigthSideBar/JoinPublicButton.tsx</title>
+    <title>Code coverage report for modules/Fight/styles/voicechat.css</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../../../../../prettify.css" />
-    <link rel="stylesheet" href="../../../../../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../../../../../favicon.png" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../../../../../sort-arrow-sprite.png);
+            background-image: url(../../../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../../index.html">All files</a> / <a href="index.html">modules/Lobby/Components/MainLobbyPage/RigthSideBar</a> JoinPublicButton.tsx</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">modules/Fight/styles</a> voicechat.css</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/3</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -80,21 +80,7 @@
 <a name='L15'></a><a href='#L15'>15</a>
 <a name='L16'></a><a href='#L16'>16</a>
 <a name='L17'></a><a href='#L17'>17</a>
-<a name='L18'></a><a href='#L18'>18</a>
-<a name='L19'></a><a href='#L19'>19</a>
-<a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a>
-<a name='L22'></a><a href='#L22'>22</a>
-<a name='L23'></a><a href='#L23'>23</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L18'></a><a href='#L18'>18</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -102,33 +88,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React,{useState} from 'react';
-import { PublicRoomPopUp } from '../../PublicRoomPopUp/PublicRoomPop';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/* ── Scrollbar Arena Chat ─────────────────────────────────── */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 3px;
+}
 &nbsp;
-export const JoinPublicButton: React.FC = () =&gt; {
-    const [isOpen, setIsOpen] = useState(false);
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent;
+}
 &nbsp;
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #ea580c44, #c2410c88, #ea580c44);
+    border-radius: 999px;
+}
 &nbsp;
-    return (
-        &lt;&gt;
-          &lt;button onClick={() =&gt; { setIsOpen(true) }}  className="group relative flex items-center justify-between p-6 bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 active:scale-[0.98] border-l-0 hover:border-l-[6px] border-secondary-container shadow-xl overflow-hidden rounded-[18px] cursor-pointer"&gt;
-            &lt;div className="flex flex-col items-start z-1"&gt;
-                &lt;span className="font-headline text-xl font-bold uppercase tracking-tight text-on-surface"&gt;Sala publica&lt;/span&gt;
-                &lt;span className="text-[10px] text-stone-500 font-body mt-1 uppercase tracking-widest"&gt;Entra a una sala publica&lt;/span&gt;
-            &lt;/div&gt;               
-            &lt;span className="material-symbols-outlined text-stone-700 group-hover:text-secondary text-4xl transition-colors" data-icon="planet"&gt;planet&lt;/span&gt;
-        &lt;/button&gt;
-        {
-            isOpen &amp;&amp; &lt;PublicRoomPopUp <span class="fstat-no" title="function not covered" >onClose={() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etIsOpen(false)}</span> /&gt;
-        }
-        &lt;/&gt;
-      
-    );
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #ea580c99, #c2410c, #ea580c99);
+    box-shadow: 0 0 6px rgba(234, 88, 12, 0.4);
 }</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -138,14 +123,14 @@ export const JoinPublicButton: React.FC = () =&gt; {
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
                 at 2026-05-22T02:26:58.717Z
             </div>
-        <script src="../../../../../prettify.js"></script>
+        <script src="../../../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../../../../../sorter.js"></script>
-        <script src="../../../../../block-navigation.js"></script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
     </body>
 </html>
     

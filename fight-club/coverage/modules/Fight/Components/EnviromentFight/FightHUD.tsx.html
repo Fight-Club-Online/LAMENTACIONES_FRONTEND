@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">84.21% </span>
+                <span class="strong">89.47% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>16/19</span>
+                <span class='fraction'>17/19</span>
             </div>
         
             
@@ -212,7 +212,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -343,7 +343,7 @@ const FightHUD: React.FC&lt;Props&gt; = ({ gameState, userId, onStart, onHelp, o
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!gameState) <span class="cstat-no" title="statement not covered" >return null;</span>
 &nbsp;
     const calculateHP = (current: number | undefined, max: number | undefined) =&gt; {
-        <span class="missing-if-branch" title="if path not taken" >I</span>if (current === undefined || max === undefined || max &lt;= 0 || current &lt;= 0) <span class="cstat-no" title="statement not covered" >return 0;</span>
+        if (current === undefined || max === undefined || max &lt;= 0 || current &lt;= 0) return 0;
         return (current / max) * 100;
     };
 &nbsp;
@@ -352,7 +352,7 @@ const FightHUD: React.FC&lt;Props&gt; = ({ gameState, userId, onStart, onHelp, o
 &nbsp;
     const P1_DEAD = p1HealthPerc &lt;= 0;
     const P2_DEAD = p2HealthPerc &lt;= 0;
-    const IS_P1_CRITICAL = p1HealthPerc &lt; 30 &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >!P1_DEAD;</span>
+    const IS_P1_CRITICAL = p1HealthPerc &lt; 30 &amp;&amp; !P1_DEAD;
     const IS_P2_CRITICAL = p2HealthPerc &lt; 30 &amp;&amp; !P2_DEAD;
 &nbsp;
     const helpButtonState = useMemo(() =&gt; {
@@ -374,19 +374,19 @@ const FightHUD: React.FC&lt;Props&gt; = ({ gameState, userId, onStart, onHelp, o
                 &lt;div className="flex-1"&gt;
                     &lt;div className="flex justify-between items-end mb-1 px-2"&gt;
                         &lt;span className={`font-black italic text-xl tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase transition-all duration-500
-                            ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-zinc-600' : I</span>S_P1_CRITICAL ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-red-500 animate-pulse' : '</span>text-white'}`}&gt;
+                            ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-zinc-600' : I</span>S_P1_CRITICAL ? 'text-red-500 animate-pulse' : <span class="branch-1 cbranch-no" title="branch not covered" >'text-white'}`}&gt;</span>
                             {gameState.player1.characterName || <span class="branch-1 cbranch-no" title="branch not covered" >'P1'} </span>{P1_DEAD &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >'(K.O.)'}</span>
                         &lt;/span&gt;
-                        &lt;span className={`font-bold text-xs mb-1 transition-colors ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-zinc-600' : I</span>S_P1_CRITICAL ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-red-400' : '</span>text-zinc-400'}`}&gt;
+                        &lt;span className={`font-bold text-xs mb-1 transition-colors ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-zinc-600' : I</span>S_P1_CRITICAL ? 'text-red-400' : <span class="branch-1 cbranch-no" title="branch not covered" >'text-zinc-400'}`}&gt;</span>
                             {Math.ceil(p1HealthPerc)}%
                         &lt;/span&gt;
                     &lt;/div&gt;
                     &lt;div className={`relative h-8 bg-zinc-900/80 border-2 skew-x-[-15deg] overflow-hidden backdrop-blur-sm transition-all duration-500 
-                        ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'border-zinc-700 grayscale' : I</span>S_P1_CRITICAL ? <span class="branch-0 cbranch-no" title="branch not covered" >'border-red-500' : '</span>border-zinc-200'}`}&gt;
+                        ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'border-zinc-700 grayscale' : I</span>S_P1_CRITICAL ? 'border-red-500' : <span class="branch-1 cbranch-no" title="branch not covered" >'border-zinc-200'}`}&gt;</span>
                         &lt;div 
                             className={`h-full transition-all duration-700 ease-out 
                                 ${P1_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'bg-zinc-700' : '</span>bg-gradient-to-l from-red-600 via-orange-500 to-yellow-400'}
-                                ${IS_P1_CRITICAL ? <span class="branch-0 cbranch-no" title="branch not covered" >'animate-[pulse_0.4s_infinite] shadow-[0_0_30px_rgba(220,38,38,0.8)]' : !</span>P1_DEAD ? 'shadow-[0_0_20px_rgba(239,68,68,0.4)]' : <span class="branch-1 cbranch-no" title="branch not covered" >''}`}</span>
+                                ${IS_P1_CRITICAL ? 'animate-[pulse_0.4s_infinite] shadow-[0_0_30px_rgba(220,38,38,0.8)]' : <span class="branch-1 cbranch-no" title="branch not covered" >!P1_DEAD ? 'shadow-[0_0_20px_rgba(239,68,68,0.4)]' : ''}`}</span>
                             style={{ width: `${p1HealthPerc}%`, float: 'right' }}
                         /&gt;
                         &lt;div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" /&gt;
@@ -396,7 +396,7 @@ const FightHUD: React.FC&lt;Props&gt; = ({ gameState, userId, onStart, onHelp, o
                 {/* VS */}
                 &lt;div className="flex flex-col items-center z-10 px-2"&gt;
                     &lt;div className={`bg-zinc-950 border-2 text-white font-black text-xl px-4 py-1 skew-x-[-15deg] transition-all
-                        ${(P1_DEAD || P2_DEAD) ? <span class="branch-0 cbranch-no" title="branch not covered" >'border-zinc-600 shadow-none' : '</span>border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'}`}&gt;
+                        ${(P1_DEAD || P2_DEAD) ? 'border-zinc-600 shadow-none' : <span class="branch-1 cbranch-no" title="branch not covered" >'border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'}`}&gt;</span>
                         VS
                     &lt;/div&gt;
                 &lt;/div&gt;
@@ -404,20 +404,20 @@ const FightHUD: React.FC&lt;Props&gt; = ({ gameState, userId, onStart, onHelp, o
                 {/* Player 2 HUD */}
                 &lt;div className="flex-1"&gt;
                     &lt;div className="flex justify-between items-end mb-1 px-2"&gt;
-                        &lt;span className={`font-bold text-xs mb-1 transition-colors ${P2_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-zinc-600' : I</span>S_P2_CRITICAL ? 'text-red-400' : <span class="branch-1 cbranch-no" title="branch not covered" >'text-zinc-400'}`}&gt;</span>
+                        &lt;span className={`font-bold text-xs mb-1 transition-colors ${P2_DEAD ? 'text-zinc-600' : <span class="branch-1 cbranch-no" title="branch not covered" >IS_P2_CRITICAL ? 'text-red-400' : 'text-zinc-400'}`}&gt;</span>
                             {Math.ceil(p2HealthPerc)}%
                         &lt;/span&gt;
                         &lt;span className={`font-black italic text-xl tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase transition-all duration-500
-                            ${P2_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'text-zinc-600' : I</span>S_P2_CRITICAL ? 'text-red-500 animate-pulse' : <span class="branch-1 cbranch-no" title="branch not covered" >'text-white'}`}&gt;</span>
-                            {P2_DEAD &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >'(K.O.) '} </span>{gameState.player2.characterName || <span class="branch-1 cbranch-no" title="branch not covered" >'P2'}</span>
+                            ${P2_DEAD ? 'text-zinc-600' : <span class="branch-1 cbranch-no" title="branch not covered" >IS_P2_CRITICAL ? 'text-red-500 animate-pulse' : 'text-white'}`}&gt;</span>
+                            {P2_DEAD &amp;&amp; '(K.O.) '} {gameState.player2.characterName || <span class="branch-1 cbranch-no" title="branch not covered" >'P2'}</span>
                         &lt;/span&gt;
                     &lt;/div&gt;
                     &lt;div className={`relative h-8 bg-zinc-900/80 border-2 skew-x-[-15deg] overflow-hidden backdrop-blur-sm transition-all duration-500 
-                        ${P2_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'border-zinc-700 grayscale' : I</span>S_P2_CRITICAL ? 'border-red-500' : <span class="branch-1 cbranch-no" title="branch not covered" >'border-zinc-200'}`}&gt;</span>
+                        ${P2_DEAD ? 'border-zinc-700 grayscale' : <span class="branch-1 cbranch-no" title="branch not covered" >IS_P2_CRITICAL ? 'border-red-500' : 'border-zinc-200'}`}&gt;</span>
                         &lt;div 
                             className={`h-full transition-all duration-700 ease-out 
-                                ${P2_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'bg-zinc-700' : '</span>bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400'}
-                                ${IS_P2_CRITICAL ? 'animate-[pulse_0.4s_infinite] shadow-[0_0_30px_rgba(220,38,38,0.8)]' : <span class="branch-1 cbranch-no" title="branch not covered" >!P2_DEAD ? 'shadow-[0_0_20px_rgba(239,68,68,0.4)]' : ''}`}</span>
+                                ${P2_DEAD ? 'bg-zinc-700' : <span class="branch-1 cbranch-no" title="branch not covered" >'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400'}</span>
+                                ${IS_P2_CRITICAL ? <span class="branch-0 cbranch-no" title="branch not covered" >'animate-[pulse_0.4s_infinite] shadow-[0_0_30px_rgba(220,38,38,0.8)]' : !</span>P2_DEAD ? <span class="branch-0 cbranch-no" title="branch not covered" >'shadow-[0_0_20px_rgba(239,68,68,0.4)]' : '</span>'}`}
                             style={{ width: `${p2HealthPerc}%` }}
                         /&gt;
                         &lt;div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" /&gt;
@@ -466,7 +466,7 @@ export default FightHUD;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-21T19:21:40.884Z
+                at 2026-05-22T02:26:58.717Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

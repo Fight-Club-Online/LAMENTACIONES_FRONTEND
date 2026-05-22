@@ -14,5 +14,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.tsx'],
     globals: false,
+    coverage: {
+      exclude: ['src/modules/authentication/Config/**'],
+    },
   },
 })
